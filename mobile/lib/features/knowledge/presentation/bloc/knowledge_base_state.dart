@@ -76,6 +76,34 @@ class KnowledgeBaseDetailLoaded extends KnowledgeBaseState {
   }
 }
 
+/// 创建成功状态
+class KnowledgeBaseCreated extends KnowledgeBaseState {
+  final KnowledgeBase knowledgeBase;
+  final String message;
+
+  const KnowledgeBaseCreated({
+    required this.knowledgeBase,
+    this.message = '知识库创建成功',
+  });
+
+  @override
+  List<Object?> get props => [knowledgeBase, message];
+}
+
+/// 更新成功状态
+class KnowledgeBaseUpdated extends KnowledgeBaseState {
+  final KnowledgeBase knowledgeBase;
+  final String message;
+
+  const KnowledgeBaseUpdated({
+    required this.knowledgeBase,
+    this.message = '知识库更新成功',
+  });
+
+  @override
+  List<Object?> get props => [knowledgeBase, message];
+}
+
 /// 创建/更新成功状态
 class KnowledgeBaseOperationSuccess extends KnowledgeBaseState {
   final KnowledgeBase knowledgeBase;

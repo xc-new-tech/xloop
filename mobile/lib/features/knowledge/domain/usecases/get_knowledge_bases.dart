@@ -59,4 +59,6 @@ class GetKnowledgeBases implements UseCase<List<KnowledgeBase>, GetKnowledgeBase
   Future<Either<Failure, List<String>>> getTags() async {
     return await repository.getKnowledgeBaseTags();
   }
-} 
+}
+
+ 

@@ -24,11 +24,20 @@ class _ChatPageState extends State<ChatPage>
   @override
   bool get wantKeepAlive => true;
 
+  late final TextEditingController _searchController;
+
   @override
   void initState() {
     super.initState();
+    _searchController = TextEditingController();
     // 加载对话列表
-    context.read<ConversationBloc>().add(const LoadConversationsEvent());
+    context.read<ConversationBloc>().add(const GetConversationsEvent());
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
   }
 
   @override
@@ -60,7 +69,8 @@ class _ChatPageState extends State<ChatPage>
             padding: const EdgeInsets.all(16),
             color: AppColors.surface,
             child: ConversationSearchBar(
-              onSearchChanged: (query) {
+              controller: _searchController,
+              onSearch: (query) {
                 context.read<ConversationBloc>().add(
                       SearchConversationsEvent(query: query),
                     );
@@ -81,7 +91,7 @@ class _ChatPageState extends State<ChatPage>
                   return _buildErrorView(state.message);
                 }
 
-                if (state is ConversationLoaded) {
+                if (state is ConversationsLoaded) {
                   if (state.conversations.isEmpty) {
                     return _buildEmptyView();
                   }
@@ -119,8 +129,8 @@ class _ChatPageState extends State<ChatPage>
               conversation: conversation,
               onTap: () => _openConversation(conversation),
               onDelete: () => _deleteConversation(conversation),
-              onArchive: () => _archiveConversation(conversation),
-              onRate: (rating) => _rateConversation(conversation, rating),
+
+              onRate: (rating) => _rateConversation(conversation, rating.round()),
             ),
           );
         },
@@ -256,7 +266,7 @@ class _ChatPageState extends State<ChatPage>
           ElevatedButton.icon(
             onPressed: () {
               context.read<ConversationBloc>().add(
-                    const LoadConversationsEvent(),
+                    const GetConversationsEvent(),
                   );
             },
             icon: const Icon(Icons.refresh),
@@ -268,7 +278,7 @@ class _ChatPageState extends State<ChatPage>
   }
 
   Future<void> _refreshConversations() async {
-    context.read<ConversationBloc>().add(const LoadConversationsEvent());
+    context.read<ConversationBloc>().add(const GetConversationsEvent());
   }
 
   void _createNewConversation() {
@@ -304,7 +314,7 @@ class _ChatPageState extends State<ChatPage>
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (context) => ConversationDetailPage(
-          conversationId: conversation.id,
+          id: conversation.id,
         ),
       ),
     ).then((_) {
@@ -329,7 +339,7 @@ class _ChatPageState extends State<ChatPage>
               onPressed: () {
                 Navigator.of(context).pop();
                 context.read<ConversationBloc>().add(
-                      DeleteConversationEvent(conversationId: conversation.id),
+                      DeleteConversationEvent(id: conversation.id),
                     );
               },
               style: TextButton.styleFrom(
@@ -345,8 +355,8 @@ class _ChatPageState extends State<ChatPage>
 
   void _archiveConversation(Conversation conversation) {
     context.read<ConversationBloc>().add(
-          ArchiveConversationEvent(conversationId: conversation.id),
-        );
+      ArchiveConversationEvent(id: conversation.id),
+    );
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -355,7 +365,7 @@ class _ChatPageState extends State<ChatPage>
           label: '撤销',
           onPressed: () {
             context.read<ConversationBloc>().add(
-                  UnarchiveConversationEvent(conversationId: conversation.id),
+                  UnarchiveConversationEvent(id: conversation.id),
                 );
           },
         ),
@@ -366,7 +376,7 @@ class _ChatPageState extends State<ChatPage>
   void _rateConversation(Conversation conversation, int rating) {
     context.read<ConversationBloc>().add(
           RateConversationEvent(
-            conversationId: conversation.id,
+            id: conversation.id,
             rating: rating,
           ),
         );
@@ -383,15 +393,22 @@ class _ChatPageState extends State<ChatPage>
     showDialog(
       context: context,
       builder: (context) {
-        return const ConversationFilterDialog();
-      },
-    ).then((filter) {
-      if (filter != null) {
-        context.read<ConversationBloc>().add(
-              FilterConversationsEvent(filter: filter),
+        return ConversationFilterDialog(
+          onApplyFilter: (type, status, knowledgeBaseId) {
+            context.read<ConversationBloc>().add(
+              FilterConversationsEvent(
+                type: type,
+                status: status,
+                knowledgeBaseId: knowledgeBaseId,
+              ),
             );
-      }
-    });
+          },
+          onClearFilter: () {
+            context.read<ConversationBloc>().add(const ClearFiltersEvent());
+          },
+        );
+      },
+          );
   }
 }
 
@@ -399,10 +416,10 @@ class _ChatPageState extends State<ChatPage>
 class ConversationDetailPage extends StatelessWidget {
   const ConversationDetailPage({
     super.key,
-    required this.conversationId,
+    required this.id,
   });
 
-  final String conversationId;
+  final String id;
 
   @override
   Widget build(BuildContext context) {
@@ -422,7 +439,7 @@ class ConversationDetailPage extends StatelessWidget {
               color: Colors.blue,
             ),
             const SizedBox(height: 16),
-            Text('对话ID: $conversationId'),
+            Text('对话ID: $id'),
             const SizedBox(height: 8),
             const Text('对话详情页面开发中...'),
           ],

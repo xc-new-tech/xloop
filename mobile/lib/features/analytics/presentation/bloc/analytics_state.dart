@@ -404,6 +404,11 @@ class PerformanceData extends Equatable {
   final ResourceUsage resourceUsage;
   final List<OptimizationImpact> optimizationImpacts;
 
+  // 添加缺少的getter方法
+  int get averageResponseTime => responseTimeMetrics.averageResponseTime;
+  double get successRate => searchMetrics.successRate;
+  double get throughput => searchMetrics.totalQueries / 60.0; // 简化计算，假设60秒内的查询数
+
   @override
   List<Object> get props => [
         searchMetrics,
@@ -536,6 +541,14 @@ class UserSatisfactionData extends Equatable {
   final List<FeedbackCategory> feedbackCategories;
   final List<SatisfactionTrendPoint> trendData;
 
+  // 添加缺少的getter方法
+  int get totalFeedbacks => ratingDistribution.values.fold(0, (sum, count) => sum + count);
+  Map<String, double> get sentimentDistribution => {
+    'positive': sentimentAnalysis.positivePercentage ?? 0.0,
+    'negative': sentimentAnalysis.negativePercentage ?? 0.0,
+    'neutral': sentimentAnalysis.neutralPercentage ?? 0.0,
+  };
+
   @override
   List<Object> get props => [
         averageRating,
@@ -597,6 +610,11 @@ class RealtimeMetrics extends Equatable {
   final double systemLoad;
   final DateTime timestamp;
   final List<MetricAlert> alerts;
+
+  // 添加缺少的getter方法
+  int get queueLength => (systemLoad * 10).round(); // 简化计算
+  double get errorRate => 1.0 - (currentQualityScore / 100.0); // 基于质量分数计算错误率
+  double get avgResponseTime => responseTime.toDouble();
 
   @override
   List<Object> get props => [

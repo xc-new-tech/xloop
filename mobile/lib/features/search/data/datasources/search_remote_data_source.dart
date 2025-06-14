@@ -74,14 +74,14 @@ class SearchRemoteDataSourceImpl implements SearchRemoteDataSource {
         return HybridSearchResultsModel.fromApiJson(response.data, query);
       } else {
         throw ServerException(
-          message: response.data['message'] ?? '搜索失败',
-          statusCode: response.statusCode,
+          response.data['message'] ?? '搜索失败',
+          response.statusCode,
         );
       }
     } on DioException catch (e) {
       throw _handleDioException(e, '搜索请求失败');
     } catch (e) {
-      throw ServerException(message: '搜索过程中发生未知错误: $e');
+      throw ServerException('搜索过程中发生未知错误: $e');
     }
   }
 
@@ -105,14 +105,14 @@ class SearchRemoteDataSourceImpl implements SearchRemoteDataSource {
             .toList();
       } else {
         throw ServerException(
-          message: response.data['message'] ?? '文档搜索失败',
-          statusCode: response.statusCode,
+          response.data['message'] ?? '文档搜索失败',
+          response.statusCode,
         );
       }
     } on DioException catch (e) {
       throw _handleDioException(e, '文档搜索请求失败');
     } catch (e) {
-      throw ServerException(message: '文档搜索过程中发生未知错误: $e');
+      throw ServerException('文档搜索过程中发生未知错误: $e');
     }
   }
 
@@ -136,14 +136,14 @@ class SearchRemoteDataSourceImpl implements SearchRemoteDataSource {
             .toList();
       } else {
         throw ServerException(
-          message: response.data['message'] ?? 'FAQ搜索失败',
-          statusCode: response.statusCode,
+          response.data['message'] ?? 'FAQ搜索失败',
+          response.statusCode,
         );
       }
     } on DioException catch (e) {
       throw _handleDioException(e, 'FAQ搜索请求失败');
     } catch (e) {
-      throw ServerException(message: 'FAQ搜索过程中发生未知错误: $e');
+      throw ServerException('FAQ搜索过程中发生未知错误: $e');
     }
   }
 
@@ -164,14 +164,14 @@ class SearchRemoteDataSourceImpl implements SearchRemoteDataSource {
         );
       } else {
         throw ServerException(
-          message: response.data['message'] ?? '推荐内容获取失败',
-          statusCode: response.statusCode,
+          response.data['message'] ?? '推荐内容获取失败',
+          response.statusCode,
         );
       }
     } on DioException catch (e) {
       throw _handleDioException(e, '推荐内容请求失败');
     } catch (e) {
-      throw ServerException(message: '推荐内容获取过程中发生未知错误: $e');
+      throw ServerException('推荐内容获取过程中发生未知错误: $e');
     }
   }
 
@@ -185,14 +185,14 @@ class SearchRemoteDataSourceImpl implements SearchRemoteDataSource {
 
       if (response.statusCode != 200 || response.data['success'] != true) {
         throw ServerException(
-          message: response.data['message'] ?? '文档向量化失败',
-          statusCode: response.statusCode,
+          response.data['message'] ?? '文档向量化失败',
+          response.statusCode,
         );
       }
     } on DioException catch (e) {
       throw _handleDioException(e, '文档向量化请求失败');
     } catch (e) {
-      throw ServerException(message: '文档向量化过程中发生未知错误: $e');
+      throw ServerException('文档向量化过程中发生未知错误: $e');
     }
   }
 
@@ -206,14 +206,14 @@ class SearchRemoteDataSourceImpl implements SearchRemoteDataSource {
 
       if (response.statusCode != 200 || response.data['success'] != true) {
         throw ServerException(
-          message: response.data['message'] ?? 'FAQ向量化失败',
-          statusCode: response.statusCode,
+          response.data['message'] ?? 'FAQ向量化失败',
+          response.statusCode,
         );
       }
     } on DioException catch (e) {
       throw _handleDioException(e, 'FAQ向量化请求失败');
     } catch (e) {
-      throw ServerException(message: 'FAQ向量化过程中发生未知错误: $e');
+      throw ServerException('FAQ向量化过程中发生未知错误: $e');
     }
   }
 
@@ -231,14 +231,14 @@ class SearchRemoteDataSourceImpl implements SearchRemoteDataSource {
         return BatchVectorizeResultModel.fromApiJson(response.data);
       } else {
         throw ServerException(
-          message: response.data['message'] ?? '批量向量化失败',
-          statusCode: response.statusCode,
+          response.data['message'] ?? '批量向量化失败',
+          response.statusCode,
         );
       }
     } on DioException catch (e) {
       throw _handleDioException(e, '批量向量化请求失败');
     } catch (e) {
-      throw ServerException(message: '批量向量化过程中发生未知错误: $e');
+      throw ServerException('批量向量化过程中发生未知错误: $e');
     }
   }
 
@@ -253,14 +253,14 @@ class SearchRemoteDataSourceImpl implements SearchRemoteDataSource {
         return SearchStatsModel.fromApiJson(response.data);
       } else {
         throw ServerException(
-          message: response.data['message'] ?? '获取搜索统计失败',
-          statusCode: response.statusCode,
+          response.data['message'] ?? '获取搜索统计失败',
+          response.statusCode,
         );
       }
     } on DioException catch (e) {
       throw _handleDioException(e, '搜索统计请求失败');
     } catch (e) {
-      throw ServerException(message: '获取搜索统计过程中发生未知错误: $e');
+      throw ServerException('获取搜索统计过程中发生未知错误: $e');
     }
   }
 
@@ -276,14 +276,14 @@ class SearchRemoteDataSourceImpl implements SearchRemoteDataSource {
 
       if (response.statusCode != 200 || response.data['success'] != true) {
         throw ServerException(
-          message: response.data['message'] ?? '清理缓存失败',
-          statusCode: response.statusCode,
+          response.data['message'] ?? '清理缓存失败',
+          response.statusCode,
         );
       }
     } on DioException catch (e) {
       throw _handleDioException(e, '清理缓存请求失败');
     } catch (e) {
-      throw ServerException(message: '清理缓存过程中发生未知错误: $e');
+      throw ServerException('清理缓存过程中发生未知错误: $e');
     }
   }
 
@@ -298,14 +298,14 @@ class SearchRemoteDataSourceImpl implements SearchRemoteDataSource {
         return response.data as Map<String, dynamic>;
       } else {
         throw ServerException(
-          message: '健康检查失败',
-          statusCode: response.statusCode,
+          '健康检查失败',
+          response.statusCode,
         );
       }
     } on DioException catch (e) {
       throw _handleDioException(e, '健康检查请求失败');
     } catch (e) {
-      throw ServerException(message: '健康检查过程中发生未知错误: $e');
+      throw ServerException('健康检查过程中发生未知错误: $e');
     }
   }
 
@@ -316,36 +316,36 @@ class SearchRemoteDataSourceImpl implements SearchRemoteDataSource {
       case DioExceptionType.sendTimeout:
       case DioExceptionType.receiveTimeout:
         return ServerException(
-          message: '网络请求超时，请检查网络连接',
-          statusCode: 408,
+          '网络请求超时，请检查网络连接',
+          408,
         );
       case DioExceptionType.badResponse:
         final statusCode = e.response?.statusCode ?? 500;
         final message = e.response?.data?['message'] ?? defaultMessage;
         return ServerException(
-          message: message,
-          statusCode: statusCode,
+          message,
+          statusCode,
         );
       case DioExceptionType.cancel:
         return ServerException(
-          message: '请求已取消',
-          statusCode: 499,
+          '请求已取消',
+          499,
         );
       case DioExceptionType.connectionError:
         return ServerException(
-          message: '网络连接错误，请检查网络设置',
-          statusCode: 503,
+          '网络连接错误，请检查网络设置',
+          503,
         );
       case DioExceptionType.badCertificate:
         return ServerException(
-          message: 'SSL证书验证失败',
-          statusCode: 495,
+          'SSL证书验证失败',
+          495,
         );
       case DioExceptionType.unknown:
       default:
         return ServerException(
-          message: '$defaultMessage: ${e.message}',
-          statusCode: 500,
+          '$defaultMessage: ${e.message}',
+          500,
         );
     }
   }

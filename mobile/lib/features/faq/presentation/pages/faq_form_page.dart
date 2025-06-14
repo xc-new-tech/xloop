@@ -96,6 +96,7 @@ class _FaqFormPageState extends State<FaqFormPage> {
   void _submitFaq(Map<String, dynamic> faqData) {
     // 将Map转换为FaqEntity
     final faq = FaqEntity(
+      metadata: {},
       id: isEditing ? widget.faqId! : '',
       question: faqData['question'] as String,
       answer: faqData['answer'] as String,
@@ -104,7 +105,7 @@ class _FaqFormPageState extends State<FaqFormPage> {
       knowledgeBaseId: faqData['knowledgeBaseId'] as String?,
       status: faqData['status'] as FaqStatus? ?? FaqStatus.draft,
       isPublic: faqData['isPublic'] as bool? ?? false,
-      priority: faqData['priority'] as int? ?? 0,
+      priority: FaqPriority.values[faqData['priority'] as int? ?? 0],
       viewCount: 0,
       likeCount: 0,
       dislikeCount: 0,

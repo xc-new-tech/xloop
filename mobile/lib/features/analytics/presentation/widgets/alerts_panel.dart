@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../domain/entities/alert.dart';
 import '../bloc/analytics_state.dart';
 
 /// 警报面板
@@ -98,19 +99,19 @@ class AlertsPanel extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: _getAlertColor(alert.severity).withOpacity(0.05),
+        color: _getAlertColor(alert.level).withOpacity(0.05),
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
-          color: _getAlertColor(alert.severity).withOpacity(0.2),
+          color: _getAlertColor(alert.level).withOpacity(0.2),
         ),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Icon(
-            _getAlertIcon(alert.severity),
+            _getAlertIcon(alert.level),
             size: 20,
-            color: _getAlertColor(alert.severity),
+            color: _getAlertColor(alert.level),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -129,21 +130,21 @@ class AlertsPanel extends StatelessWidget {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                       decoration: BoxDecoration(
-                        color: _getAlertColor(alert.severity).withOpacity(0.2),
+                        color: _getAlertColor(alert.level).withOpacity(0.2),
                         borderRadius: BorderRadius.circular(4),
                       ),
                       child: Text(
-                        alert.severity.toUpperCase(),
+                        alert.level.name.toUpperCase(),
                         style: TextStyle(
                           fontSize: 10,
                           fontWeight: FontWeight.bold,
-                          color: _getAlertColor(alert.severity),
+                          color: _getAlertColor(alert.level),
                         ),
                       ),
                     ),
                     const SizedBox(width: 8),
                     Text(
-                      _formatTime(alert.timestamp),
+                      _formatTime(alert.createdAt),
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
                             color: AppColors.onSurface.withOpacity(0.6),
                           ),
@@ -169,29 +170,29 @@ class AlertsPanel extends StatelessWidget {
     );
   }
 
-  Color _getAlertColor(String severity) {
-    switch (severity.toLowerCase()) {
-      case 'critical':
+  Color _getAlertColor(AlertLevel level) {
+    switch (level) {
+      case AlertLevel.critical:
         return AppColors.error;
-      case 'warning':
+      case AlertLevel.error:
+        return AppColors.error;
+      case AlertLevel.warning:
         return AppColors.warning;
-      case 'info':
+      case AlertLevel.info:
         return AppColors.info;
-      default:
-        return AppColors.onSurface;
     }
   }
 
-  IconData _getAlertIcon(String severity) {
-    switch (severity.toLowerCase()) {
-      case 'critical':
+  IconData _getAlertIcon(AlertLevel level) {
+    switch (level) {
+      case AlertLevel.critical:
         return Icons.error;
-      case 'warning':
+      case AlertLevel.error:
+        return Icons.error;
+      case AlertLevel.warning:
         return Icons.warning;
-      case 'info':
+      case AlertLevel.info:
         return Icons.info;
-      default:
-        return Icons.notifications;
     }
   }
 

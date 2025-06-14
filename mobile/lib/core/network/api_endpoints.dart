@@ -1,7 +1,7 @@
 /// API端点配置类
 class ApiEndpoints {
   // 基础路径
-  static const String baseUrl = 'http://localhost:3000';
+  static const String baseUrl = 'http://localhost:3001';
   static const String apiVersion = '/api/v1';
   static const String basePath = '$baseUrl$apiVersion';
 

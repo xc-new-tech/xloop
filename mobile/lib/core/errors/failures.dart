@@ -38,6 +38,22 @@ class AuthFailure extends Failure {
   });
 }
 
+/// 身份验证失败
+class AuthenticationFailure extends Failure {
+  const AuthenticationFailure({
+    super.message = '身份验证失败，请重新登录',
+    super.statusCode = 401,
+  });
+}
+
+/// 授权失败
+class AuthorizationFailure extends Failure {
+  const AuthorizationFailure({
+    super.message = '权限不足，无法访问此资源',
+    super.statusCode = 403,
+  });
+}
+
 /// 验证失败
 class ValidationFailure extends Failure {
   final Map<String, List<String>>? fieldErrors;

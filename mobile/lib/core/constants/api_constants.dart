@@ -3,7 +3,7 @@ class ApiConstants {
   ApiConstants._();
 
   // 基础URL配置
-  static const String baseUrl = 'http://localhost:3000/api/v1';
+  static const String baseUrl = 'http://localhost:3001';
   static const String apiVersion = '/api';
   
   // 认证相关端点
@@ -27,25 +27,26 @@ class ApiConstants {
   // 管理员端点
   static const String adminUsers = '$userBaseUrl/admin/users';
   
-  // 知识库相关端点
+  // 知识库相关端点 (核心服务 - 3002端口)
+  static const String coreServiceUrl = 'http://localhost:3002';
   static const String knowledgeBases = '$apiVersion/knowledge-bases';
   static String knowledgeBase(String id) => '$knowledgeBases/$id';
   static String knowledgeBaseDocuments(String id) => '$knowledgeBases/$id/documents';
   static String document(String id) => '/documents/$id';
   
-  // 文件相关端点
+  // 文件相关端点 (核心服务)
   static const String files = '$apiVersion/files';
   static String file(String id) => '$files/$id';
   static const String upload = '$files/upload';
   static const String download = '$files/download';
   
-  // 对话相关端点
+  // 对话相关端点 (核心服务)
   static const String conversations = '$apiVersion/conversations';
   static String conversation(String id) => '$conversations/$id';
   static String conversationMessages(String id) => '$conversations/$id/messages';
   static const String chat = '/chat';
   
-  // 搜索相关端点
+  // 搜索相关端点 (核心服务)
   static const String search = '$apiVersion/search';
   static const String semanticSearch = '$search/semantic';
   static const String keywordSearch = '$search/keyword';

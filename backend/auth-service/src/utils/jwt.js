@@ -139,9 +139,6 @@ class JWTUtils {
     // 生成令牌族ID（用于令牌轮换安全机制）
     const tokenFamily = crypto.randomUUID();
 
-    // 对刷新令牌进行哈希处理
-    const refreshTokenHash = await bcrypt.hash(refreshToken, 10);
-
     // 计算刷新令牌过期时间
     const refreshExpiresAt = new Date();
     const expiresInMs = this.parseExpiresIn(jwtConfig.refreshExpiresIn);
@@ -151,8 +148,7 @@ class JWTUtils {
     try {
       await UserSession.create({
         user_id: user.id,
-        refresh_token_hash: refreshTokenHash,
-        token_family: tokenFamily,
+        refresh_token: refreshToken,  // 直接存储刷新令牌
         expires_at: refreshExpiresAt,
         ip_address: sessionInfo.ipAddress,
         user_agent: sessionInfo.userAgent,
@@ -200,7 +196,7 @@ class JWTUtils {
       let validSession = null;
       for (const session of sessions) {
         // 验证刷新令牌哈希
-        const isValid = await bcrypt.compare(refreshToken, session.refresh_token_hash);
+        const isValid = await bcrypt.compare(refreshToken, session.refresh_token);
         if (isValid) {
           validSession = session;
           break;
@@ -256,7 +252,7 @@ class JWTUtils {
 
       for (const session of sessions) {
         // 验证刷新令牌哈希
-        const isValid = await bcrypt.compare(refreshToken, session.refresh_token_hash);
+        const isValid = await bcrypt.compare(refreshToken, session.refresh_token);
         if (isValid) {
           await session.revoke(reason);
           return true;

@@ -46,7 +46,7 @@ class PerformanceMetricsCard extends StatelessWidget {
                 context,
                 '平均响应时间',
                 '${performanceData!.averageResponseTime.toStringAsFixed(0)}ms',
-                _getResponseTimeColor(performanceData!.averageResponseTime),
+                _getResponseTimeColor(performanceData!.averageResponseTime.toDouble()),
               ),
               const SizedBox(height: 8),
               

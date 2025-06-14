@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../domain/entities/alert.dart';
 import '../bloc/analytics_state.dart';
 
 /// 实时监控面板
@@ -52,7 +53,7 @@ class RealtimeMonitoringPanel extends StatelessWidget {
               const SizedBox(height: 12),
               
               // 监控指标
-              _buildMetricRow('活跃连接', '${metrics.activeConnections}'),
+              _buildMetricRow('活跃连接', '${metrics.activeConversations}'),
               _buildMetricRow('队列长度', '${metrics.queueLength}'),
               _buildMetricRow('错误率', '${(metrics.errorRate * 100).toStringAsFixed(1)}%'),
               _buildMetricRow('响应时间', '${metrics.avgResponseTime.toStringAsFixed(0)}ms'),
@@ -67,7 +68,7 @@ class RealtimeMonitoringPanel extends StatelessWidget {
                       ),
                 ),
                 const SizedBox(height: 8),
-                ...metrics.alerts.take(3).map((alert) => _buildAlertItem(alert)),
+                ...metrics.alerts.take(3).map((alert) => _buildMetricAlertItem(alert)),
               ],
             ] else ...[
               Center(
@@ -118,23 +119,23 @@ class RealtimeMonitoringPanel extends StatelessWidget {
     );
   }
 
-  Widget _buildAlertItem(Alert alert) {
+  Widget _buildMetricAlertItem(MetricAlert alert) {
     return Container(
       margin: const EdgeInsets.only(bottom: 4),
       padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
-        color: _getAlertColor(alert.severity).withOpacity(0.1),
+        color: _getMetricAlertColor(alert.severity).withOpacity(0.1),
         borderRadius: BorderRadius.circular(4),
         border: Border.all(
-          color: _getAlertColor(alert.severity).withOpacity(0.3),
+          color: _getMetricAlertColor(alert.severity).withOpacity(0.3),
         ),
       ),
       child: Row(
         children: [
           Icon(
-            _getAlertIcon(alert.severity),
+            _getMetricAlertIcon(alert.severity),
             size: 16,
-            color: _getAlertColor(alert.severity),
+            color: _getMetricAlertColor(alert.severity),
           ),
           const SizedBox(width: 8),
           Expanded(
@@ -142,7 +143,7 @@ class RealtimeMonitoringPanel extends StatelessWidget {
               alert.message,
               style: TextStyle(
                 fontSize: 12,
-                color: _getAlertColor(alert.severity),
+                color: _getMetricAlertColor(alert.severity),
               ),
             ),
           ),
@@ -151,29 +152,88 @@ class RealtimeMonitoringPanel extends StatelessWidget {
     );
   }
 
-  Color _getAlertColor(String severity) {
-    switch (severity.toLowerCase()) {
-      case 'critical':
+  Widget _buildAlertItem(Alert alert) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 4),
+      padding: const EdgeInsets.all(8),
+      decoration: BoxDecoration(
+        color: _getAlertColor(alert.level).withOpacity(0.1),
+        borderRadius: BorderRadius.circular(4),
+        border: Border.all(
+          color: _getAlertColor(alert.level).withOpacity(0.3),
+        ),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            _getAlertIcon(alert.level),
+            size: 16,
+            color: _getAlertColor(alert.level),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              alert.message,
+              style: TextStyle(
+                fontSize: 12,
+                color: _getAlertColor(alert.level),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Color _getMetricAlertColor(AlertSeverity severity) {
+    switch (severity) {
+      case AlertSeverity.critical:
         return AppColors.error;
-      case 'warning':
+      case AlertSeverity.high:
+        return AppColors.error;
+      case AlertSeverity.medium:
         return AppColors.warning;
-      case 'info':
+      case AlertSeverity.low:
         return AppColors.info;
-      default:
-        return AppColors.onSurface;
     }
   }
 
-  IconData _getAlertIcon(String severity) {
-    switch (severity.toLowerCase()) {
-      case 'critical':
+  IconData _getMetricAlertIcon(AlertSeverity severity) {
+    switch (severity) {
+      case AlertSeverity.critical:
         return Icons.error;
-      case 'warning':
+      case AlertSeverity.high:
+        return Icons.error;
+      case AlertSeverity.medium:
         return Icons.warning;
-      case 'info':
+      case AlertSeverity.low:
         return Icons.info;
-      default:
-        return Icons.notifications;
+    }
+  }
+
+  Color _getAlertColor(AlertLevel level) {
+    switch (level) {
+      case AlertLevel.critical:
+        return AppColors.error;
+      case AlertLevel.error:
+        return AppColors.error;
+      case AlertLevel.warning:
+        return AppColors.warning;
+      case AlertLevel.info:
+        return AppColors.info;
+    }
+  }
+
+  IconData _getAlertIcon(AlertLevel level) {
+    switch (level) {
+      case AlertLevel.critical:
+        return Icons.error;
+      case AlertLevel.error:
+        return Icons.error;
+      case AlertLevel.warning:
+        return Icons.warning;
+      case AlertLevel.info:
+        return Icons.info;
     }
   }
 } 

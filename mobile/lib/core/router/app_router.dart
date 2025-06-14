@@ -68,8 +68,8 @@ class AppRouter {
       final isLoading = authBloc.state is AuthLoading;
       
       final isGoingToLogin = state.matchedLocation == login ||
-          state.matchedLocation == register ||
-          state.matchedLocation == forgotPassword;
+          state.matchedLocation == '/login/register' ||
+          state.matchedLocation == '/login/forgot-password';
       
       final isGoingToSplash = state.matchedLocation == splash;
       

@@ -6,21 +6,47 @@ part 'user_model.g.dart';
 /// 用户数据模型类，用于JSON序列化和反序列化
 @JsonSerializable()
 class UserModel extends User {
+  @JsonKey(name: 'first_name')
+  @override
+  final String? firstName;
+  
+  @JsonKey(name: 'last_name')
+  @override
+  final String? lastName;
+  
+  @JsonKey(name: 'email_verified')
+  @override
+  final bool isEmailVerified;
+  
+  @JsonKey(name: 'created_at')
+  @override
+  final DateTime createdAt;
+  
+  @JsonKey(name: 'updated_at')
+  @override
+  final DateTime updatedAt;
+
   const UserModel({
     required super.id,
     required super.username,
     required super.email,
-    super.firstName,
-    super.lastName,
+    this.firstName,
+    this.lastName,
     super.avatar,
     required super.role,
     required super.status,
-    required super.isEmailVerified,
-    required super.createdAt,
-    required super.updatedAt,
+    required this.isEmailVerified,
+    required this.createdAt,
+    required this.updatedAt,
     super.profile,
     super.preferences,
-  });
+  }) : super(
+         firstName: firstName,
+         lastName: lastName,
+         isEmailVerified: isEmailVerified,
+         createdAt: createdAt,
+         updatedAt: updatedAt,
+       );
 
   /// 从JSON创建UserModel实例
   factory UserModel.fromJson(Map<String, dynamic> json) =>

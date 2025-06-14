@@ -8,9 +8,7 @@ import '../bloc/faq_state.dart';
 import '../widgets/faq_list_item.dart';
 import '../widgets/faq_search_bar.dart';
 import '../../../shared/presentation/widgets/base_page.dart';
-import '../../../shared/presentation/widgets/base_loading_page.dart';
-import '../../../shared/presentation/widgets/base_error_page.dart';
-import '../../../shared/presentation/widgets/base_empty_page.dart';
+import '../../domain/entities/faq_entity.dart';
 
 /// FAQ列表页面
 class FaqListPage extends StatefulWidget {
@@ -45,8 +43,8 @@ class _FaqListPageState extends State<FaqListPage> {
 
   void _loadFaqs() {
     context.read<FaqBloc>().add(const SearchFaqsEvent(
-      filter: FaqFilter(),
-      sort: FaqSort(),
+      filter: const FaqFilter(),
+      sort: const FaqSort(),
       isRefresh: true,
     ));
   }
@@ -124,23 +122,41 @@ class _FaqListPageState extends State<FaqListPage> {
 
   Widget _buildBody(BuildContext context, FaqState state) {
     if (state.isLoading && state.faqs.isEmpty) {
-      return const BaseLoadingPage();
+      return const Center(child: CircularProgressIndicator());
     }
 
     if (state.hasError && state.faqs.isEmpty) {
-      return BaseErrorPage(
-        message: state.errorMessage ?? '加载失败',
-        onRetry: _loadFaqs,
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(state.errorMessage ?? '加载失败'),
+            ElevatedButton(
+              onPressed: _loadFaqs,
+              child: const Text('重试'),
+            ),
+          ],
+        ),
       );
     }
 
     if (state.faqs.isEmpty) {
-      return BaseEmptyPage(
-        title: '暂无FAQ',
-        message: '还没有创建任何FAQ，点击右下角按钮开始创建吧！',
-        icon: Icons.quiz_outlined,
-        actionText: '创建FAQ',
-        onAction: () => context.push('/faq/create'),
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.quiz_outlined, size: 64),
+            const SizedBox(height: 16),
+            const Text('暂无FAQ', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 8),
+            const Text('还没有创建任何FAQ，点击右下角按钮开始创建吧！'),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: () => context.push('/faq/create'),
+              child: const Text('创建FAQ'),
+            ),
+          ],
+        ),
       );
     }
 

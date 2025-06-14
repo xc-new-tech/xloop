@@ -70,4 +70,13 @@ class ParseException extends AppException {
   
   @override
   String toString() => 'ParseException: $message${code != null ? ' (Code: $code)' : ''}';
+}
+
+/// 未找到异常
+class NotFoundException extends AppException {
+  const NotFoundException({required String message, String? code}) 
+      : super(message, code);
+  
+  @override
+  String toString() => 'NotFoundException: $message${code != null ? ' (Code: $code)' : ''}';
 } 

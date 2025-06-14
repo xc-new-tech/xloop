@@ -25,6 +25,13 @@ class ApiEndpoints {
   static const String myKnowledgeBases = '$knowledgeBases/my';
   static const String publicKnowledgeBases = '$knowledgeBases/public';
   
+  // 知识库动态端点方法
+  static String knowledgeBaseDetail(String id) => '$knowledgeBases/$id';
+  static String knowledgeBaseFiles(String id) => '$knowledgeBases/$id/files';
+  static String knowledgeBaseImport(String id) => '$knowledgeBases/$id/import';
+  static String knowledgeBaseExport(String id) => '$knowledgeBases/$id/export';
+  static String knowledgeBaseStatus(String id) => '$knowledgeBases/$id/status';
+  
   // 文件相关
   static const String files = '$baseUrl/files';
   static const String getFiles = '$files'; // 获取文件列表
@@ -34,6 +41,15 @@ class ApiEndpoints {
   // FAQ相关
   static const String faqs = '$baseUrl/faqs';
   static const String faqCategories = '$baseUrl/faq-categories';
+  static const String faqSearch = '$faqs/search';
+  static const String faqPopular = '$faqs/popular';
+  static const String faqBulkDelete = '$faqs/bulk-delete';
+  
+  // FAQ动态端点方法
+  static String faqDetail(String id) => '$faqs/$id';
+  static String faqLike(String id) => '$faqs/$id/like';
+  static String faqDislike(String id) => '$faqs/$id/dislike';
+  static String faqToggleStatus(String id) => '$faqs/$id/toggle-status';
   
   // 对话相关
   static const String conversations = '$baseUrl/conversations';

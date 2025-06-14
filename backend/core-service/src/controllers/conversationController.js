@@ -1,6 +1,6 @@
 const { Conversation, KnowledgeBase, User } = require('../models');
 const { Op } = require('sequelize');
-const logger = require('../utils/logger');
+const logger = require('../config/logger');
 const { ApiError } = require('../utils/errors');
 const { validateUUID, validatePagination } = require('../validators/common');
 const { v4: uuidv4 } = require('uuid');

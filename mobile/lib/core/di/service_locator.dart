@@ -115,8 +115,21 @@ Future<void> initializeDependencies() async {
     () => AppPreferences(sharedPreferences: sl()),
   );
   
-  // Dio实例 - 直接注册，暂时不使用DioClient
-  sl.registerLazySingleton<Dio>(() => Dio());
+  // Dio实例 - 配置正确的baseURL和选项
+  sl.registerLazySingleton<Dio>(() {
+    final dio = Dio();
+    dio.options = BaseOptions(
+      baseUrl: 'http://localhost:3001',
+      connectTimeout: const Duration(seconds: 30),
+      receiveTimeout: const Duration(seconds: 30),
+      sendTimeout: const Duration(seconds: 30),
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
+    );
+    return dio;
+  });
   
   // API客户端
   sl.registerLazySingleton<ApiClient>(

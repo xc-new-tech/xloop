@@ -1,8 +1,6 @@
-
-
-import '../../../../core/network/api_client.dart';
-import '../../../../core/network/api_endpoints.dart';
-import '../../../../core/error/exceptions.dart';
+import '../../../../core/api/api_client.dart';
+import '../../../../core/api/api_endpoints.dart';
+import '../../../../core/errors/exceptions.dart';
 import '../models/faq_model.dart';
 
 abstract class FaqRemoteDataSource {
@@ -97,12 +95,12 @@ class FaqRemoteDataSourceImpl implements FaqRemoteDataSource {
 
       final response = await _apiClient.get(
         ApiEndpoints.faqs,
-        queryParameters: queryParams,
+        queryParameters: queryParams.map((key, value) => MapEntry(key, value.toString())),
       );
 
       return FaqListResponse.fromJson(response.data);
     } catch (e) {
-      throw ServerException('获取FAQ列表失败: ${e.toString()}');
+      throw ServerException(message: '获取FAQ列表失败: ${e.toString()}');
     }
   }
 
@@ -111,12 +109,12 @@ class FaqRemoteDataSourceImpl implements FaqRemoteDataSource {
     try {
       final response = await _apiClient.get(
         ApiEndpoints.faqSearch,
-        queryParameters: params.toQueryParams(),
+        queryParameters: params.toQueryParams().map((key, value) => MapEntry(key, value.toString())),
       );
 
       return FaqListResponse.fromJson(response.data);
     } catch (e) {
-      throw ServerException('搜索FAQ失败: ${e.toString()}');
+      throw ServerException(message: '搜索FAQ失败: ${e.toString()}');
     }
   }
 
@@ -129,7 +127,7 @@ class FaqRemoteDataSourceImpl implements FaqRemoteDataSource {
 
       return FaqResponse.fromJson(response.data);
     } catch (e) {
-      throw ServerException('获取FAQ详情失败: ${e.toString()}');
+      throw ServerException(message: '获取FAQ详情失败: ${e.toString()}');
     }
   }
 
@@ -143,7 +141,7 @@ class FaqRemoteDataSourceImpl implements FaqRemoteDataSource {
 
       return FaqResponse.fromJson(response.data);
     } catch (e) {
-      throw ServerException('创建FAQ失败: ${e.toString()}');
+      throw ServerException(message: '创建FAQ失败: ${e.toString()}');
     }
   }
 
@@ -157,7 +155,7 @@ class FaqRemoteDataSourceImpl implements FaqRemoteDataSource {
 
       return FaqResponse.fromJson(response.data);
     } catch (e) {
-      throw ServerException('更新FAQ失败: ${e.toString()}');
+      throw ServerException(message: '更新FAQ失败: ${e.toString()}');
     }
   }
 
@@ -168,7 +166,7 @@ class FaqRemoteDataSourceImpl implements FaqRemoteDataSource {
         ApiEndpoints.faqDetail(id),
       );
     } catch (e) {
-      throw ServerException('删除FAQ失败: ${e.toString()}');
+      throw ServerException(message: '删除FAQ失败: ${e.toString()}');
     }
   }
 
@@ -181,7 +179,7 @@ class FaqRemoteDataSourceImpl implements FaqRemoteDataSource {
         data: request.toJson(),
       );
     } catch (e) {
-      throw ServerException('批量删除FAQ失败: ${e.toString()}');
+      throw ServerException(message: '批量删除FAQ失败: ${e.toString()}');
     }
   }
 
@@ -194,7 +192,7 @@ class FaqRemoteDataSourceImpl implements FaqRemoteDataSource {
 
       return FaqCategoriesResponse.fromJson(response.data);
     } catch (e) {
-      throw ServerException('获取FAQ分类失败: ${e.toString()}');
+      throw ServerException(message: '获取FAQ分类失败: ${e.toString()}');
     }
   }
 
@@ -208,7 +206,7 @@ class FaqRemoteDataSourceImpl implements FaqRemoteDataSource {
 
       return FaqListResponse.fromJson(response.data);
     } catch (e) {
-      throw ServerException('获取热门FAQ失败: ${e.toString()}');
+      throw ServerException(message: '获取热门FAQ失败: ${e.toString()}');
     }
   }
 
@@ -221,7 +219,7 @@ class FaqRemoteDataSourceImpl implements FaqRemoteDataSource {
 
       return FaqResponse.fromJson(response.data);
     } catch (e) {
-      throw ServerException('点赞FAQ失败: ${e.toString()}');
+      throw ServerException(message: '点赞FAQ失败: ${e.toString()}');
     }
   }
 
@@ -234,7 +232,7 @@ class FaqRemoteDataSourceImpl implements FaqRemoteDataSource {
 
       return FaqResponse.fromJson(response.data);
     } catch (e) {
-      throw ServerException('点踩FAQ失败: ${e.toString()}');
+      throw ServerException(message: '点踩FAQ失败: ${e.toString()}');
     }
   }
 
@@ -247,7 +245,7 @@ class FaqRemoteDataSourceImpl implements FaqRemoteDataSource {
 
       return FaqResponse.fromJson(response.data);
     } catch (e) {
-      throw ServerException('切换FAQ状态失败: ${e.toString()}');
+      throw ServerException(message: '切换FAQ状态失败: ${e.toString()}');
     }
   }
 } 

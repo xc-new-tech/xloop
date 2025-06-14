@@ -3,7 +3,7 @@ const router = express.Router();
 const faqController = require('../controllers/faqController');
 const { authenticateToken, requireAuth } = require('../middleware/auth');
 const { validateFAQInput, validateFAQUpdate } = require('../validators/faqValidator');
-const rateLimit = require('../middleware/rateLimit');
+const { createLimiter } = require('../middleware/rateLimit');
 
 /**
  * @swagger
@@ -674,7 +674,7 @@ router.post('/bulk/delete', requireAuth, faqController.bulkDeleteFAQs);
  *       500:
  *         $ref: '#/components/responses/InternalServerError'
  */
-router.post('/:id/like', rateLimit({ windowMs: 60000, max: 10 }), faqController.likeFAQ);
+router.post('/:id/like', createLimiter({ windowMs: 60000, max: 10 }), faqController.likeFAQ);
 
 /**
  * @swagger
@@ -717,7 +717,7 @@ router.post('/:id/like', rateLimit({ windowMs: 60000, max: 10 }), faqController.
  *       500:
  *         $ref: '#/components/responses/InternalServerError'
  */
-router.post('/:id/dislike', rateLimit({ windowMs: 60000, max: 10 }), faqController.dislikeFAQ);
+router.post('/:id/dislike', createLimiter({ windowMs: 60000, max: 10 }), faqController.dislikeFAQ);
 
 /**
  * @swagger

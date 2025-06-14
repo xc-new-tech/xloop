@@ -7,6 +7,7 @@ import 'package:logger/logger.dart';
 import '../network/network_info.dart';
 import '../storage/token_storage.dart';
 import '../storage/app_preferences.dart';
+import '../constants/api_constants.dart';
 import '../../features/auth/data/datasources/auth_remote_datasource.dart';
 import '../../features/auth/data/datasources/auth_remote_datasource_impl.dart';
 import '../../features/auth/data/repositories/auth_repository_impl.dart';
@@ -22,7 +23,23 @@ Future<void> configureDependencies() async {
   // External dependencies
   final sharedPreferences = await SharedPreferences.getInstance();
   sl.registerLazySingleton(() => sharedPreferences);
-  sl.registerLazySingleton(() => Dio());
+  
+  // 配置Dio实例使用正确的base URL
+  sl.registerLazySingleton(() {
+    final dio = Dio();
+    dio.options = BaseOptions(
+      baseUrl: ApiConstants.baseUrl,
+      connectTimeout: const Duration(seconds: 30),
+      receiveTimeout: const Duration(seconds: 30),
+      sendTimeout: const Duration(seconds: 30),
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
+    );
+    return dio;
+  });
+  
   sl.registerLazySingleton(() => Connectivity());
   sl.registerLazySingleton(() => Logger());
 

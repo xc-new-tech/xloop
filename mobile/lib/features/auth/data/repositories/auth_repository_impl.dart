@@ -109,7 +109,7 @@ class AuthRepositoryImpl implements AuthRepository {
       
       return Right(RegisterResult(
         message: response.message,
-        requiresEmailVerification: true,
+        requiresEmailVerification: false,
         userId: response.data,
       ));
     } on NetworkException catch (e) {

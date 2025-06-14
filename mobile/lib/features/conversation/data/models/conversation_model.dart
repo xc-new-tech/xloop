@@ -5,6 +5,17 @@ part 'conversation_model.g.dart';
 
 @JsonSerializable()
 class ConversationMessageModel extends ConversationMessage {
+  @override
+  final List<MessageSourceModel> sources;
+
+  @override
+  @JsonKey(fromJson: _tokenUsageFromJson, toJson: _tokenUsageToJson)
+  final TokenUsage? tokens;
+
+  @override
+  @JsonKey(fromJson: _messageErrorFromJson, toJson: _messageErrorToJson)
+  final MessageError? error;
+
   const ConversationMessageModel({
     required super.id,
     required super.role,
@@ -12,11 +23,27 @@ class ConversationMessageModel extends ConversationMessage {
     required super.contentType,
     required super.timestamp,
     super.metadata = const {},
-    super.sources = const [],
-    super.tokens,
+    this.sources = const [],
+    this.tokens,
     super.processingTime,
-    super.error,
-  });
+    this.error,
+  }) : super(sources: sources, tokens: tokens, error: error);
+
+  static TokenUsage? _tokenUsageFromJson(Map<String, dynamic>? json) {
+    return json != null ? TokenUsageModel.fromJson(json) : null;
+  }
+
+  static Map<String, dynamic>? _tokenUsageToJson(TokenUsage? tokens) {
+    return tokens != null ? TokenUsageModel.fromEntity(tokens).toJson() : null;
+  }
+
+  static MessageError? _messageErrorFromJson(Map<String, dynamic>? json) {
+    return json != null ? MessageErrorModel.fromJson(json) : null;
+  }
+
+  static Map<String, dynamic>? _messageErrorToJson(MessageError? error) {
+    return error != null ? MessageErrorModel.fromEntity(error).toJson() : null;
+  }
 
   factory ConversationMessageModel.fromJson(Map<String, dynamic> json) =>
       _$ConversationMessageModelFromJson(json);
@@ -46,10 +73,10 @@ class ConversationMessageModel extends ConversationMessage {
       contentType: contentType,
       timestamp: timestamp,
       metadata: metadata,
-      sources: sources.map((s) => (s as MessageSourceModel).toEntity()).toList(),
-      tokens: tokens != null ? (tokens as TokenUsageModel).toEntity() : null,
+      sources: sources.map((s) => s.toEntity()).toList(),
+      tokens: tokens,
       processingTime: processingTime,
-      error: error != null ? (error as MessageErrorModel).toEntity() : null,
+      error: error,
     );
   }
 }
@@ -152,6 +179,9 @@ class MessageErrorModel extends MessageError {
 
 @JsonSerializable()
 class ConversationModel extends Conversation {
+  @override
+  final List<ConversationMessageModel> messages;
+
   const ConversationModel({
     required super.id,
     required super.sessionId,
@@ -160,7 +190,7 @@ class ConversationModel extends Conversation {
     super.title,
     required super.type,
     required super.status,
-    required super.messages,
+    required this.messages,
     super.context = const {},
     super.settings = const {},
     super.tags = const [],
@@ -175,7 +205,7 @@ class ConversationModel extends Conversation {
     super.userAgent,
     required super.createdAt,
     required super.updatedAt,
-  });
+  }) : super(messages: messages);
 
   factory ConversationModel.fromJson(Map<String, dynamic> json) =>
       _$ConversationModelFromJson(json);
@@ -218,7 +248,7 @@ class ConversationModel extends Conversation {
       title: title,
       type: type,
       status: status,
-      messages: messages.map((m) => (m as ConversationMessageModel).toEntity()).toList(),
+      messages: messages.map((m) => m.toEntity()).toList(),
       context: context,
       settings: settings,
       tags: tags,
@@ -239,10 +269,34 @@ class ConversationModel extends Conversation {
 
 @JsonSerializable()
 class ConversationStatsModel extends ConversationStats {
+  @override
+  @JsonKey(fromJson: _overviewFromJson, toJson: _overviewToJson)
+  final ConversationOverview overview;
+
+  @override
+  @JsonKey(fromJson: _breakdownsFromJson, toJson: _breakdownsToJson)
+  final ConversationBreakdowns breakdowns;
+
   const ConversationStatsModel({
-    required super.overview,
-    required super.breakdowns,
-  });
+    required this.overview,
+    required this.breakdowns,
+  }) : super(overview: overview, breakdowns: breakdowns);
+
+  static ConversationOverview _overviewFromJson(Map<String, dynamic> json) {
+    return ConversationOverviewModel.fromJson(json);
+  }
+
+  static Map<String, dynamic> _overviewToJson(ConversationOverview overview) {
+    return ConversationOverviewModel.fromEntity(overview).toJson();
+  }
+
+  static ConversationBreakdowns _breakdownsFromJson(Map<String, dynamic> json) {
+    return ConversationBreakdownsModel.fromJson(json);
+  }
+
+  static Map<String, dynamic> _breakdownsToJson(ConversationBreakdowns breakdowns) {
+    return ConversationBreakdownsModel.fromEntity(breakdowns).toJson();
+  }
 
   factory ConversationStatsModel.fromJson(Map<String, dynamic> json) =>
       _$ConversationStatsModelFromJson(json);
@@ -258,8 +312,8 @@ class ConversationStatsModel extends ConversationStats {
 
   ConversationStats toEntity() {
     return ConversationStats(
-      overview: (overview as ConversationOverviewModel).toEntity(),
-      breakdowns: (breakdowns as ConversationBreakdownsModel).toEntity(),
+      overview: overview,
+      breakdowns: breakdowns,
     );
   }
 }
@@ -302,10 +356,16 @@ class ConversationOverviewModel extends ConversationOverview {
 
 @JsonSerializable()
 class ConversationBreakdownsModel extends ConversationBreakdowns {
+  @override
+  final List<ConversationTypeStatsModel> byType;
+
+  @override
+  final List<ConversationStatusStatsModel> byStatus;
+
   const ConversationBreakdownsModel({
-    required super.byType,
-    required super.byStatus,
-  });
+    required this.byType,
+    required this.byStatus,
+  }) : super(byType: byType, byStatus: byStatus);
 
   factory ConversationBreakdownsModel.fromJson(Map<String, dynamic> json) =>
       _$ConversationBreakdownsModelFromJson(json);
@@ -321,8 +381,8 @@ class ConversationBreakdownsModel extends ConversationBreakdowns {
 
   ConversationBreakdowns toEntity() {
     return ConversationBreakdowns(
-      byType: byType.map((t) => (t as ConversationTypeStatsModel).toEntity()).toList(),
-      byStatus: byStatus.map((s) => (s as ConversationStatusStatsModel).toEntity()).toList(),
+      byType: byType.map((t) => t.toEntity()).toList(),
+      byStatus: byStatus.map((s) => s.toEntity()).toList(),
     );
   }
 }
@@ -413,12 +473,25 @@ class SendMessageRequestModel extends SendMessageRequest {
 
 @JsonSerializable()
 class SendMessageResponseModel extends SendMessageResponse {
+  @override
+  final ConversationMessageModel userMessage;
+
+  @override
+  final ConversationMessageModel assistantMessage;
+
+  @override
+  final List<MessageSourceModel> sources;
+
   const SendMessageResponseModel({
-    required super.userMessage,
-    required super.assistantMessage,
-    required super.sources,
+    required this.userMessage,
+    required this.assistantMessage,
+    required this.sources,
     required super.processingTime,
-  });
+  }) : super(
+          userMessage: userMessage,
+          assistantMessage: assistantMessage,
+          sources: sources,
+        );
 
   factory SendMessageResponseModel.fromJson(Map<String, dynamic> json) =>
       _$SendMessageResponseModelFromJson(json);
@@ -436,9 +509,9 @@ class SendMessageResponseModel extends SendMessageResponse {
 
   SendMessageResponse toEntity() {
     return SendMessageResponse(
-      userMessage: (userMessage as ConversationMessageModel).toEntity(),
-      assistantMessage: (assistantMessage as ConversationMessageModel).toEntity(),
-      sources: sources.map((s) => (s as MessageSourceModel).toEntity()).toList(),
+      userMessage: userMessage.toEntity(),
+      assistantMessage: assistantMessage.toEntity(),
+      sources: sources.map((s) => s.toEntity()).toList(),
       processingTime: processingTime,
     );
   }

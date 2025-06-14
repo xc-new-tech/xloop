@@ -150,6 +150,8 @@ class _ConversationFilterDialogState extends State<ConversationFilterDialog> {
     switch (type) {
       case ConversationType.chat:
         return '聊天对话';
+      case ConversationType.search:
+        return '搜索对话';
       case ConversationType.qa:
         return '问答对话';
       case ConversationType.support:
@@ -161,12 +163,10 @@ class _ConversationFilterDialogState extends State<ConversationFilterDialog> {
     switch (status) {
       case ConversationStatus.active:
         return '活跃';
-      case ConversationStatus.paused:
-        return '暂停';
-      case ConversationStatus.completed:
-        return '完成';
+      case ConversationStatus.ended:
+        return '已结束';
       case ConversationStatus.archived:
-        return '归档';
+        return '已归档';
     }
   }
 } 

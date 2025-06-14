@@ -11,6 +11,7 @@ class ConversationCard extends StatelessWidget {
   final VoidCallback? onLongPress;
   final VoidCallback? onDelete;
   final VoidCallback? onEdit;
+  final Function(double)? onRate;
 
   const ConversationCard({
     Key? key,
@@ -21,6 +22,7 @@ class ConversationCard extends StatelessWidget {
     this.onLongPress,
     this.onDelete,
     this.onEdit,
+    this.onRate,
   }) : super(key: key);
 
   @override
@@ -235,17 +237,13 @@ class ConversationCard extends StatelessWidget {
         color = Colors.green;
         text = '活跃';
         break;
-      case ConversationStatus.paused:
-        color = Colors.orange;
-        text = '暂停';
-        break;
-      case ConversationStatus.completed:
+      case ConversationStatus.ended:
         color = Colors.blue;
-        text = '完成';
+        text = '已结束';
         break;
       case ConversationStatus.archived:
         color = Colors.grey;
-        text = '归档';
+        text = '已归档';
         break;
     }
     
@@ -270,6 +268,8 @@ class ConversationCard extends StatelessWidget {
     switch (type) {
       case ConversationType.chat:
         return Icons.chat_bubble_outline;
+      case ConversationType.search:
+        return Icons.search;
       case ConversationType.qa:
         return Icons.quiz_outlined;
       case ConversationType.support:
@@ -281,6 +281,8 @@ class ConversationCard extends StatelessWidget {
     switch (type) {
       case ConversationType.chat:
         return Colors.blue;
+      case ConversationType.search:
+        return Colors.purple;
       case ConversationType.qa:
         return Colors.green;
       case ConversationType.support:

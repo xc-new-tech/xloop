@@ -11,12 +11,19 @@ class DocumentSearchResultModel extends DocumentSearchResult {
     required super.id,
     required super.title,
     required super.content,
-    required super.similarity,
-    super.knowledgeBaseId,
-    super.metadata,
-    required super.timestamp,
+    required super.score,
+    required super.knowledgeBaseId,
+    super.knowledgeBaseName,
     required super.fileName,
-    super.documentId,
+    required super.filePath,
+    required super.fileType,
+    required super.fileSize,
+    super.category,
+    super.tags = const [],
+    super.description,
+    super.metadata,
+    super.createdAt,
+    super.updatedAt,
   });
 
   factory DocumentSearchResultModel.fromJson(Map<String, dynamic> json) =>
@@ -30,12 +37,19 @@ class DocumentSearchResultModel extends DocumentSearchResult {
       id: json['documentId'] ?? json['id'] ?? '',
       title: json['title'] ?? '',
       content: json['content'] ?? '',
-      similarity: (json['similarity'] ?? 0.0).toDouble(),
-      knowledgeBaseId: json['knowledgeBaseId'],
-      metadata: json['metadata'] as Map<String, dynamic>?,
-      timestamp: DateTime.now(),
+      score: (json['similarity'] ?? json['score'] ?? 0.0).toDouble(),
+      knowledgeBaseId: json['knowledgeBaseId'] ?? '',
+      knowledgeBaseName: json['knowledgeBaseName'],
       fileName: json['fileName'] ?? '',
-      documentId: json['documentId'],
+      filePath: json['filePath'] ?? json['fileName'] ?? '',
+      fileType: json['fileType'] ?? 'unknown',
+      fileSize: json['fileSize'] ?? 0,
+      category: json['category'],
+      tags: List<String>.from(json['tags'] ?? []),
+      description: json['description'],
+      metadata: json['metadata'] as Map<String, dynamic>?,
+      createdAt: json['createdAt'] != null ? DateTime.parse(json['createdAt']) : null,
+      updatedAt: json['updatedAt'] != null ? DateTime.parse(json['updatedAt']) : null,
     );
   }
 
@@ -45,12 +59,19 @@ class DocumentSearchResultModel extends DocumentSearchResult {
       id: id,
       title: title,
       content: content,
-      similarity: similarity,
+      score: score,
       knowledgeBaseId: knowledgeBaseId,
-      metadata: metadata,
-      timestamp: timestamp,
+      knowledgeBaseName: knowledgeBaseName,
       fileName: fileName,
-      documentId: documentId,
+      filePath: filePath,
+      fileType: fileType,
+      fileSize: fileSize,
+      category: category,
+      tags: tags,
+      description: description,
+      metadata: metadata,
+      createdAt: createdAt,
+      updatedAt: updatedAt,
     );
   }
 }
@@ -62,17 +83,20 @@ class FaqSearchResultModel extends FaqSearchResult {
     required super.id,
     required super.title,
     required super.content,
-    required super.similarity,
-    super.knowledgeBaseId,
-    super.metadata,
-    required super.timestamp,
+    required super.score,
     required super.question,
     required super.answer,
-    required super.category,
-    required super.tags,
-    required super.priority,
-    required super.status,
-    super.faqId,
+    super.knowledgeBaseId,
+    super.knowledgeBaseName,
+    super.category,
+    super.tags = const [],
+    super.likes = 0,
+    super.dislikes = 0,
+    super.views = 0,
+    super.status,
+    super.metadata,
+    super.createdAt,
+    super.updatedAt,
   });
 
   factory FaqSearchResultModel.fromJson(Map<String, dynamic> json) =>
@@ -86,17 +110,20 @@ class FaqSearchResultModel extends FaqSearchResult {
       id: json['faqId'] ?? json['id'] ?? '',
       title: json['question'] ?? '',
       content: json['answer'] ?? '',
-      similarity: (json['similarity'] ?? 0.0).toDouble(),
-      knowledgeBaseId: json['knowledgeBaseId'],
-      metadata: json['metadata'] as Map<String, dynamic>?,
-      timestamp: DateTime.now(),
+      score: (json['similarity'] ?? json['score'] ?? 0.0).toDouble(),
       question: json['question'] ?? '',
       answer: json['answer'] ?? '',
-      category: json['category'] ?? '',
+      knowledgeBaseId: json['knowledgeBaseId'],
+      knowledgeBaseName: json['knowledgeBaseName'],
+      category: json['category'],
       tags: List<String>.from(json['tags'] ?? []),
-      priority: json['priority'] ?? 'medium',
-      status: json['status'] ?? 'published',
-      faqId: json['faqId'],
+      likes: json['likes'] ?? 0,
+      dislikes: json['dislikes'] ?? 0,
+      views: json['views'] ?? 0,
+      status: json['status'],
+      metadata: json['metadata'] as Map<String, dynamic>?,
+      createdAt: json['createdAt'] != null ? DateTime.parse(json['createdAt']) : null,
+      updatedAt: json['updatedAt'] != null ? DateTime.parse(json['updatedAt']) : null,
     );
   }
 
@@ -106,17 +133,20 @@ class FaqSearchResultModel extends FaqSearchResult {
       id: id,
       title: title,
       content: content,
-      similarity: similarity,
-      knowledgeBaseId: knowledgeBaseId,
-      metadata: metadata,
-      timestamp: timestamp,
+      score: score,
       question: question,
       answer: answer,
+      knowledgeBaseId: knowledgeBaseId,
+      knowledgeBaseName: knowledgeBaseName,
       category: category,
       tags: tags,
-      priority: priority,
+      likes: likes,
+      dislikes: dislikes,
+      views: views,
       status: status,
-      faqId: faqId,
+      metadata: metadata,
+      createdAt: createdAt,
+      updatedAt: updatedAt,
     );
   }
 }
@@ -124,14 +154,55 @@ class FaqSearchResultModel extends FaqSearchResult {
 /// 混合搜索结果模型
 @JsonSerializable()
 class HybridSearchResultsModel extends HybridSearchResults {
+  @override
+  final List<DocumentSearchResultModel> documents;
+  
+  @override
+  final List<FaqSearchResultModel> faqs;
+
+  @override
+  @JsonKey(fromJson: _mixedFromJson, toJson: _mixedToJson)
+  final List<SearchResult> mixed;
+
   const HybridSearchResultsModel({
-    required super.documents,
-    required super.faqs,
-    required super.mixed,
+    required this.documents,
+    required this.faqs,
+    this.mixed = const [],
     required super.total,
     required super.query,
     required super.timestamp,
-  });
+  }) : super(documents: documents, faqs: faqs, mixed: mixed);
+
+  static List<SearchResult> _mixedFromJson(List<dynamic> json) {
+    return json.map((item) {
+      final type = item['type'] as String?;
+      if (type == 'document') {
+        return DocumentSearchResultModel.fromJson(item);
+      } else if (type == 'faq') {
+        return FaqSearchResultModel.fromJson(item);
+      } else {
+        // 默认作为文档处理
+        return DocumentSearchResultModel.fromJson(item);
+      }
+    }).toList();
+  }
+
+  static List<Map<String, dynamic>> _mixedToJson(List<SearchResult> mixed) {
+    return mixed.map((result) {
+      if (result is DocumentSearchResultModel) {
+        final json = result.toJson();
+        json['type'] = 'document';
+        return json;
+      } else if (result is FaqSearchResultModel) {
+        final json = result.toJson();
+        json['type'] = 'faq';
+        return json;
+      } else {
+        // 默认处理
+        return {'type': 'unknown'};
+      }
+    }).toList();
+  }
 
   factory HybridSearchResultsModel.fromJson(Map<String, dynamic> json) =>
       _$HybridSearchResultsModelFromJson(json);

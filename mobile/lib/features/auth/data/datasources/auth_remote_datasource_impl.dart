@@ -44,6 +44,8 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   Future<ApiResponse<String>> register(RegisterRequest request) async {
     try {
       _logger.d('发送注册请求: ${request.email}');
+      _logger.d('请求URL: ${_dio.options.baseUrl}${ApiConstants.register}');
+      _logger.d('请求数据: ${request.toJson()}');
 
       final response = await _dio.post(
         ApiConstants.register,
@@ -51,10 +53,15 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       );
 
       if (response.statusCode == ApiConstants.created) {
-        final apiResponse = ApiResponse<String>.fromJson(
-          response.data,
-          (json) => json as String,
+        final data = response.data as Map<String, dynamic>;
+        final message = data['message'] as String? ?? '注册成功';
+        
+        final apiResponse = ApiResponse<String>(
+          success: data['success'] as bool? ?? true,
+          message: message,
+          data: message,
         );
+        
         _logger.d('注册请求成功');
         return apiResponse;
       } else {

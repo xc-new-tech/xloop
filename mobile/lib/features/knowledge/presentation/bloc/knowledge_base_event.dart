@@ -323,30 +323,4 @@ class FilterKnowledgeBasesEvent extends KnowledgeBaseEvent {
 
   @override
   List<Object?> get props => [filter];
-} 
-
-/// 加载知识库事件
-class LoadKnowledgeBasesEvent extends KnowledgeBaseEvent {
-  const LoadKnowledgeBasesEvent();
-
-  @override
-  List<Object?> get props => [];
 }
-
-/// 清除搜索事件
-class ClearKnowledgeBaseSearchEvent extends KnowledgeBaseEvent {
-  const ClearKnowledgeBaseSearchEvent();
-
-  @override
-  List<Object?> get props => [];
-}
-
-/// 筛选知识库事件
-class FilterKnowledgeBasesEvent extends KnowledgeBaseEvent {
-  final String? filter;
-
-  const FilterKnowledgeBasesEvent({this.filter});
-
-  @override
-  List<Object?> get props => [filter];
-} 

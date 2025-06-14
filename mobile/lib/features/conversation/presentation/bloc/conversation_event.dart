@@ -129,6 +129,26 @@ class DeleteConversationEvent extends ConversationEvent {
   List<Object> get props => [id];
 }
 
+/// 归档对话事件
+class ArchiveConversationEvent extends ConversationEvent {
+  final String id;
+
+  const ArchiveConversationEvent({required this.id});
+
+  @override
+  List<Object> get props => [id];
+}
+
+/// 取消归档对话事件
+class UnarchiveConversationEvent extends ConversationEvent {
+  final String id;
+
+  const UnarchiveConversationEvent({required this.id});
+
+  @override
+  List<Object> get props => [id];
+}
+
 /// 批量删除对话事件
 class BulkDeleteConversationsEvent extends ConversationEvent {
   final List<String> ids;

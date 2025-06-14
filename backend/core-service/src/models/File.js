@@ -1,5 +1,5 @@
 const { DataTypes } = require('sequelize');
-const sequelize = require('../config/database');
+const { sequelize } = require('../config/database');
 
 const File = sequelize.define('File', {
   id: {
@@ -42,17 +42,14 @@ const File = sequelize.define('File', {
   userId: {
     type: DataTypes.UUID,
     allowNull: false,
-    references: {
-      model: 'Users',
-      key: 'id'
-    },
-    comment: '上传用户ID'
+    comment: '上传用户ID（来自认证服务）'
+    // 注意：不直接引用Users表，因为用户信息在认证服务中
   },
   knowledgeBaseId: {
     type: DataTypes.UUID,
     allowNull: true,
     references: {
-      model: 'KnowledgeBases',
+      model: 'knowledge_bases',
       key: 'id'
     },
     comment: '所属知识库ID'
@@ -120,10 +117,10 @@ const File = sequelize.define('File', {
   paranoid: true, // 软删除
   indexes: [
     {
-      fields: ['userId']
+      fields: ['user_id']
     },
     {
-      fields: ['knowledgeBaseId']
+      fields: ['knowledge_base_id']
     },
     {
       fields: ['hash']
@@ -132,19 +129,20 @@ const File = sequelize.define('File', {
       fields: ['category']
     },
     {
-      fields: ['contentType']
+      fields: ['content_type']
     },
     {
       fields: ['status']
     },
     {
-      fields: ['createdAt']
-    },
-    {
-      name: 'files_search_idx',
-      type: 'GIN',
-      fields: [sequelize.fn('to_tsvector', 'english', sequelize.col('originalName'))]
+      fields: ['created_at']
     }
+    // 暂时注释掉全文搜索索引，需要PostgreSQL的pg_trgm扩展
+    // {
+    //   name: 'files_search_idx',
+    //   type: 'GIN',
+    //   fields: [sequelize.fn('to_tsvector', 'english', sequelize.col('originalName'))]
+    // }
   ],
   comment: '文件信息表'
 });
@@ -164,11 +162,8 @@ File.prototype.toJSON = function() {
 
 // 类方法
 File.associate = function(models) {
-  // 与用户的关联
-  File.belongsTo(models.User, {
-    foreignKey: 'userId',
-    as: 'user'
-  });
+  // 注意：不关联用户模型，因为用户信息在认证服务中
+  // 如果需要用户信息，通过API调用认证服务获取
   
   // 与知识库的关联
   File.belongsTo(models.KnowledgeBase, {

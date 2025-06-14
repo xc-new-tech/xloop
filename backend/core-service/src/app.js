@@ -11,7 +11,7 @@ const { connectRedis, healthCheck: redisHealthCheck } = require('./config/redis'
 const { initializeDatabase, getDatabaseStats } = require('./models');
 
 const app = express();
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT || 3002;
 
 // 中间件配置
 app.use(helmet());

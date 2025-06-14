@@ -61,7 +61,7 @@ User.init({
     unique: true,
     validate: {
       len: [3, 50],
-      isAlphanumeric: true,
+      is: /^[a-zA-Z0-9_-]+$/,  // 允许字母、数字、下划线和连字符
     },
     comment: '用户名（唯一）'
   },

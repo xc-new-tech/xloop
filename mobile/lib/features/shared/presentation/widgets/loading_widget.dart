@@ -5,144 +5,33 @@ import '../../../../core/theme/app_colors.dart';
 /// 提供多种加载样式和配置选项
 class LoadingWidget extends StatelessWidget {
   final String? message;
-  final Color? color;
-  final double size;
-  final LoadingType type;
-  final bool overlay;
+  final bool showMessage;
 
   const LoadingWidget({
-    super.key,
+    Key? key,
     this.message,
-    this.color,
-    this.size = 24.0,
-    this.type = LoadingType.circular,
-    this.overlay = false,
-  });
+    this.showMessage = true,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    Widget loading = _buildLoadingIndicator();
-
-    if (overlay) {
-      return Material(
-        color: Colors.black54,
-        child: Center(child: loading),
-      );
-    }
-
-    return loading;
-  }
-
-  Widget _buildLoadingIndicator() {
-    Widget indicator;
-
-    switch (type) {
-      case LoadingType.circular:
-        indicator = SizedBox(
-          width: size,
-          height: size,
-          child: CircularProgressIndicator(
-            strokeWidth: 2.0,
-            color: color ?? AppColors.primary,
-          ),
-        );
-        break;
-      case LoadingType.linear:
-        indicator = SizedBox(
-          width: size * 4,
-          child: LinearProgressIndicator(
-            color: color ?? AppColors.primary,
-            backgroundColor: AppColors.surfaceVariant,
-          ),
-        );
-        break;
-      case LoadingType.dots:
-        indicator = _DotsLoadingIndicator(
-          color: color ?? AppColors.primary,
-          size: size,
-        );
-        break;
-      case LoadingType.pulse:
-        indicator = _PulseLoadingIndicator(
-          color: color ?? AppColors.primary,
-          size: size,
-        );
-        break;
-      case LoadingType.spinner:
-        indicator = _SpinnerLoadingIndicator(
-          color: color ?? AppColors.primary,
-          size: size,
-        );
-        break;
-    }
-
-    if (message != null) {
-      return Card(
-        elevation: 8.0,
-        color: AppColors.surface,
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              indicator,
-              const SizedBox(height: 16),
-              Text(
-                message!,
-                style: const TextStyle(
-                  color: AppColors.textSecondary,
-                  fontSize: 14,
-                ),
-                textAlign: TextAlign.center,
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const CircularProgressIndicator(),
+          if (showMessage && message != null) ...[
+            const SizedBox(height: 16),
+            Text(
+              message!,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: Colors.grey.withValues(alpha: 0.8),
               ),
-            ],
-          ),
-        ),
-      );
-    }
-
-    return indicator;
-  }
-
-  /// 创建覆盖层加载组件
-  factory LoadingWidget.overlay({
-    String? message,
-    Color? color,
-    double size = 32.0,
-    LoadingType type = LoadingType.circular,
-  }) {
-    return LoadingWidget(
-      message: message,
-      color: color,
-      size: size,
-      type: type,
-      overlay: true,
-    );
-  }
-
-  /// 创建小型加载组件
-  factory LoadingWidget.small({
-    Color? color,
-    LoadingType type = LoadingType.circular,
-  }) {
-    return LoadingWidget(
-      color: color,
-      size: 16.0,
-      type: type,
-    );
-  }
-
-  /// 创建大型加载组件
-  factory LoadingWidget.large({
-    String? message,
-    Color? color,
-    LoadingType type = LoadingType.circular,
-  }) {
-    return LoadingWidget(
-      message: message,
-      color: color,
-      size: 48.0,
-      type: type,
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ],
+      ),
     );
   }
 }

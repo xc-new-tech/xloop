@@ -118,7 +118,7 @@ class _DashboardPageState extends State<DashboardPage>
         elevation: 0,
         actions: [
           PopupMenuButton<String>(
-            value: _selectedPeriod,
+            initialValue: _selectedPeriod,
             onSelected: (value) => _changePeriod(value),
             itemBuilder: (context) => [
               const PopupMenuItem(value: '今日', child: Text('今日')),

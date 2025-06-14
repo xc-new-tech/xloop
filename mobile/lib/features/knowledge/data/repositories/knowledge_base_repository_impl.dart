@@ -37,8 +37,6 @@ class KnowledgeBaseRepositoryImpl implements KnowledgeBaseRepository {
         final knowledgeBases = await remoteDataSource.getKnowledgeBases(
           page: page,
           limit: limit,
-          type: type?.name,
-          status: status?.name,
           search: search,
           tags: tags,
           sortBy: sortBy,
@@ -143,18 +141,22 @@ class KnowledgeBaseRepositoryImpl implements KnowledgeBaseRepository {
   Future<Either<Failure, KnowledgeBase>> createKnowledgeBase({
     required String name,
     String? description,
-    KnowledgeBaseType type = KnowledgeBaseType.personal,
-    List<String>? tags,
+    String? coverImage,
+    required KnowledgeBaseType type,
     Map<String, dynamic>? settings,
+    bool isPublic = false,
+    List<String>? tags,
   }) async {
     if (await networkInfo.isConnected) {
       try {
         final data = {
           'name': name,
           if (description != null) 'description': description,
+          if (coverImage != null) 'coverImage': coverImage,
           'type': type.name,
-          if (tags != null) 'tags': tags,
           if (settings != null) 'settings': settings,
+          'isPublic': isPublic,
+          if (tags != null) 'tags': tags,
         };
         
         final knowledgeBase = await remoteDataSource.createKnowledgeBase(data);
@@ -174,18 +176,22 @@ class KnowledgeBaseRepositoryImpl implements KnowledgeBaseRepository {
     required String id,
     String? name,
     String? description,
+    String? coverImage,
     KnowledgeBaseType? type,
-    List<String>? tags,
     Map<String, dynamic>? settings,
+    bool? isPublic,
+    List<String>? tags,
   }) async {
     if (await networkInfo.isConnected) {
       try {
         final data = <String, dynamic>{};
         if (name != null) data['name'] = name;
         if (description != null) data['description'] = description;
+        if (coverImage != null) data['coverImage'] = coverImage;
         if (type != null) data['type'] = type.name;
-        if (tags != null) data['tags'] = tags;
         if (settings != null) data['settings'] = settings;
+        if (isPublic != null) data['isPublic'] = isPublic;
+        if (tags != null) data['tags'] = tags;
         
         final knowledgeBase = await remoteDataSource.updateKnowledgeBase(id, data);
         return Right(knowledgeBase);
@@ -314,10 +320,9 @@ class KnowledgeBaseRepositoryImpl implements KnowledgeBaseRepository {
 
     try {
       final result = await remoteDataSource.importKnowledgeBase(
-        filePath: filePath,
-        name: name,
-        description: description,
-        type: type.name,
+        filePath,
+        name ?? 'Imported Knowledge Base',
+        description,
       );
       return Right(result);
     } on NetworkException catch (e) {

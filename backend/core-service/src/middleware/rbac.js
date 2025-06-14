@@ -1,5 +1,5 @@
 const { User, Role, Permission } = require('../models');
-const logger = require('../utils/logger');
+const logger = require('../config/logger');
 const { ApiError } = require('../utils/errors');
 
 /**

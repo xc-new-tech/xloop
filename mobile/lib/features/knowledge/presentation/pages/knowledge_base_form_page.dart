@@ -8,6 +8,8 @@ import '../../../../shared/widgets/custom_button.dart';
 import '../../../../shared/widgets/custom_text_field.dart';
 import '../../domain/entities/knowledge_base.dart';
 import '../bloc/knowledge_base_bloc.dart';
+import '../bloc/knowledge_base_event.dart';
+import '../bloc/knowledge_base_state.dart';
 
 class KnowledgeBaseFormPage extends StatefulWidget {
   final KnowledgeBase? knowledgeBase;
@@ -89,11 +91,11 @@ class _KnowledgeBaseFormPageState extends State<KnowledgeBaseFormPage> {
                           name: 'name',
                           label: '知识库名称',
                           initialValue: widget.knowledgeBase?.name,
-                          validator: FormBuilderValidators.compose([
+                          validators: [
                             FormBuilderValidators.required(errorText: '请输入知识库名称'),
                             FormBuilderValidators.minLength(2, errorText: '名称至少2个字符'),
                             FormBuilderValidators.maxLength(50, errorText: '名称最多50个字符'),
-                          ]),
+                          ],
                         ),
                         const SizedBox(height: 16),
                         
@@ -103,7 +105,9 @@ class _KnowledgeBaseFormPageState extends State<KnowledgeBaseFormPage> {
                           label: '描述',
                           initialValue: widget.knowledgeBase?.description,
                           maxLines: 3,
-                          validator: FormBuilderValidators.maxLength(500, errorText: '描述最多500个字符'),
+                          validators: [
+                            FormBuilderValidators.maxLength(500, errorText: '描述最多500个字符'),
+                          ],
                         ),
                       ],
                     ),
@@ -205,11 +209,10 @@ class _KnowledgeBaseFormPageState extends State<KnowledgeBaseFormPage> {
         // 更新知识库
         context.read<KnowledgeBaseBloc>().add(
           UpdateKnowledgeBaseEvent(
-            knowledgeBaseId: widget.knowledgeBase!.id,
+            id: widget.knowledgeBase!.id,
             name: formData['name'],
             description: formData['description'] ?? '',
             type: _getKnowledgeBaseType(formData['type']),
-            status: _getKnowledgeBaseStatus(formData['status']),
           ),
         );
       } else {
@@ -219,7 +222,6 @@ class _KnowledgeBaseFormPageState extends State<KnowledgeBaseFormPage> {
             name: formData['name'],
             description: formData['description'] ?? '',
             type: _getKnowledgeBaseType(formData['type']),
-            status: _getKnowledgeBaseStatus(formData['status']),
           ),
         );
       }

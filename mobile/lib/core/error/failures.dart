@@ -68,4 +68,28 @@ class UnknownFailure extends Failure {
     required String message,
     int? statusCode,
   }) : super(message: message, statusCode: statusCode);
+}
+
+/// 未找到失败
+class NotFoundFailure extends Failure {
+  const NotFoundFailure({
+    required String message,
+    int? statusCode = 404,
+  }) : super(message: message, statusCode: statusCode);
+}
+
+/// 身份验证失败
+class AuthenticationFailure extends Failure {
+  const AuthenticationFailure({
+    super.message = '身份验证失败，请重新登录',
+    super.statusCode = 401,
+  });
+}
+
+/// 授权失败
+class AuthorizationFailure extends Failure {
+  const AuthorizationFailure({
+    super.message = '权限不足，无法访问此资源',
+    super.statusCode = 403,
+  });
 } 

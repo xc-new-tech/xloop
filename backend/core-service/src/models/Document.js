@@ -196,12 +196,13 @@ const Document = sequelize.define('Document', {
       fields: ['indexing_status'],
       name: 'idx_documents_indexing_status',
     },
-    // 全文搜索索引
-    {
-      fields: ['title', 'content'],
-      using: 'gin',
-      name: 'idx_documents_fulltext',
-    },
+    // 全文搜索索引 - 需要PostgreSQL的pg_trgm扩展或使用btree索引
+    // 暂时注释掉，稍后可以通过SQL手动创建tsvector索引
+    // {
+    //   fields: ['title', 'content'],
+    //   using: 'gin',
+    //   name: 'idx_documents_fulltext',
+    // },
   ],
   hooks: {
     beforeCreate: (document) => {

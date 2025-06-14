@@ -15,6 +15,7 @@ import '../widgets/quality_trend_chart.dart';
 import '../widgets/real_time_monitoring_panel.dart';
 import '../widgets/alerts_panel.dart';
 import '../widgets/quick_actions_panel.dart';
+import '../../domain/entities/alert.dart';
 
 /// 调优系统主仪表板页面
 class AnalyticsDashboardPage extends StatefulWidget {
@@ -182,7 +183,7 @@ class _AnalyticsDashboardPageState extends State<AnalyticsDashboardPage>
                     ),
               ),
               const SizedBox(height: 16),
-              AlertsPanel(alerts: state.realtimeMetrics!.alerts),
+              AlertsPanel(alerts: _convertMetricAlertsToAlerts(state.realtimeMetrics!.alerts)),
               const SizedBox(height: 24),
             ],
 
@@ -617,5 +618,38 @@ class _AnalyticsDashboardPageState extends State<AnalyticsDashboardPage>
         ),
       ),
     );
+  }
+
+  /// 将MetricAlert转换为Alert
+  List<Alert> _convertMetricAlertsToAlerts(List<MetricAlert> metricAlerts) {
+    return metricAlerts.map((metricAlert) {
+      return Alert(
+        id: '${metricAlert.metricName}_${metricAlert.timestamp.millisecondsSinceEpoch}',
+        title: metricAlert.metricName,
+        message: metricAlert.message,
+        level: _convertAlertSeverityToLevel(metricAlert.severity),
+        status: AlertStatus.active,
+        createdAt: metricAlert.timestamp,
+        metadata: {
+          'currentValue': metricAlert.currentValue,
+          'threshold': metricAlert.threshold,
+          'type': metricAlert.type.toString(),
+        },
+      );
+    }).toList();
+  }
+
+  /// 将AlertSeverity转换为AlertLevel
+  AlertLevel _convertAlertSeverityToLevel(AlertSeverity severity) {
+    switch (severity) {
+      case AlertSeverity.low:
+        return AlertLevel.info;
+      case AlertSeverity.medium:
+        return AlertLevel.warning;
+      case AlertSeverity.high:
+        return AlertLevel.error;
+      case AlertSeverity.critical:
+        return AlertLevel.critical;
+    }
   }
 } 

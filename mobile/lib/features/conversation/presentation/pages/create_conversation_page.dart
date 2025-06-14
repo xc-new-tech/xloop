@@ -5,7 +5,7 @@ import '../../../../core/di/service_locator.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../shared/widgets/custom_app_bar.dart';
 import '../../../../shared/widgets/loading_widget.dart';
-import '../../../knowledge/domain/entities/knowledge_base_entity.dart';
+import '../../../knowledge/domain/entities/knowledge_base.dart';
 import '../../../knowledge/presentation/bloc/knowledge_base_bloc.dart';
 import '../../../knowledge/presentation/bloc/knowledge_base_event.dart';
 import '../../../knowledge/presentation/bloc/knowledge_base_state.dart';
@@ -35,7 +35,7 @@ class _CreateConversationPageState extends State<CreateConversationPage> {
   final _messageController = TextEditingController();
 
   late ConversationType _selectedType;
-  KnowledgeBaseEntity? _selectedKnowledgeBase;
+  KnowledgeBase? _selectedKnowledgeBase;
   final List<String> _tags = [];
   final Map<String, dynamic> _settings = {};
 
@@ -79,7 +79,7 @@ class _CreateConversationPageState extends State<CreateConversationPage> {
       child: Scaffold(
         appBar: const CustomAppBar(
           title: '创建对话',
-          showBack: true,
+          showBackButton: true,
         ),
         body: Form(
           key: _formKey,
@@ -186,7 +186,7 @@ class _CreateConversationPageState extends State<CreateConversationPage> {
           return const LoadingWidget();
         }
 
-        if (state is KnowledgeBaseLoaded) {
+        if (state is KnowledgeBaseListLoaded) {
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -197,19 +197,19 @@ class _CreateConversationPageState extends State<CreateConversationPage> {
                     ),
               ),
               const SizedBox(height: 8),
-              DropdownButtonFormField<KnowledgeBaseEntity>(
+              DropdownButtonFormField<KnowledgeBase>(
                 value: _selectedKnowledgeBase,
                 decoration: const InputDecoration(
                   hintText: '选择知识库（可选）',
                   border: OutlineInputBorder(),
                 ),
                 items: [
-                  const DropdownMenuItem<KnowledgeBaseEntity>(
+                  const DropdownMenuItem<KnowledgeBase>(
                     value: null,
                     child: Text('不关联知识库'),
                   ),
                   ...state.knowledgeBases.map((kb) {
-                    return DropdownMenuItem<KnowledgeBaseEntity>(
+                    return DropdownMenuItem<KnowledgeBase>(
                       value: kb,
                       child: Text(kb.name),
                     );
@@ -507,7 +507,7 @@ class _CreateConversationPageState extends State<CreateConversationPage> {
             type: _selectedType,
             title: title,
             knowledgeBaseId: _selectedKnowledgeBase?.id,
-            initialMessage: message,
+
             tags: _tags,
             settings: _settings,
           ),

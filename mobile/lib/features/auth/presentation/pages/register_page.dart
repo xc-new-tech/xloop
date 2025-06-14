@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:form_builder_validators/form_builder_validators.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/constants/route_constants.dart';
@@ -39,21 +40,15 @@ class _RegisterPageState extends State<RegisterPage> {
       body: BlocConsumer<AuthBloc, AuthState>(
         listener: (context, state) {
           if (state is AuthRegisterSuccess) {
-            // 注册成功，显示提示并可能导航到邮箱验证页面
+            // 注册成功，显示提示并导航到登录页面
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text(state.message),
                 backgroundColor: Colors.green,
               ),
             );
-            if (state.requiresEmailVerification) {
-              Navigator.of(context).pushReplacementNamed(
-                RouteConstants.emailVerification,
-                arguments: {'email': state.email},
-              );
-            } else {
-              Navigator.of(context).pushReplacementNamed(RouteConstants.login);
-            }
+            // 使用GoRouter导航到登录页面
+            context.pushReplacementNamed('login');
           } else if (state is AuthError) {
             // 显示错误消息
             ScaffoldMessenger.of(context).showSnackBar(
@@ -126,7 +121,7 @@ class _RegisterPageState extends State<RegisterPage> {
                       text: '已有账户？',
                       actionText: '立即登录',
                       onActionTap: () {
-                        Navigator.of(context).pushReplacementNamed(RouteConstants.login);
+                        context.go('/login');
                       },
                     ),
                     

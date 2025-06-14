@@ -62,13 +62,13 @@ class AuthController {
         username,
         email,
         password_hash: passwordHash,
-        email_verification_token: verificationToken,
-        email_verification_expires: verificationExpires,
-        status: 'pending',
-        email_verified: false,
+        status: 'active',  // 直接设置为活跃状态，跳过邮箱验证
+        email_verified: true,  // 直接设置为已验证
       });
 
-      // 发送验证邮件
+      // 跳过邮件发送步骤
+      // 注释掉邮件发送逻辑
+      /*
       try {
         const emailService = new EmailService();
         await emailService.sendVerificationEmail(email, username, verificationToken);
@@ -76,11 +76,12 @@ class AuthController {
         console.error('发送验证邮件失败:', emailError);
         // 邮件发送失败不影响注册成功，但需要通知用户
       }
+      */
 
       // 返回成功响应（不包含敏感信息）
       res.status(201).json({
         success: true,
-        message: '注册成功，请检查您的邮箱激活账户',
+        message: '注册成功，您现在可以登录了',
         data: {
           user: {
             id: user.id,
@@ -109,9 +110,12 @@ class AuthController {
    */
   static async login(req, res) {
     try {
+      console.log('🔍 开始登录流程...');
+      
       // 验证输入数据
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
+        console.log('❌ 输入验证失败:', errors.array());
         return res.status(400).json({
           success: false,
           error: 'VALIDATION_ERROR',
@@ -121,28 +125,36 @@ class AuthController {
       }
 
       const { email, password } = req.body;
+      console.log('📧 登录邮箱:', email);
 
       // 查找用户
+      console.log('🔍 查找用户...');
       const user = await User.findOne({ where: { email } });
       if (!user) {
+        console.log('❌ 用户不存在:', email);
         return res.status(401).json({
           success: false,
           error: 'INVALID_CREDENTIALS',
           message: '邮箱或密码错误',
         });
       }
+      console.log('✅ 找到用户:', user.username);
 
       // 验证密码
+      console.log('🔐 验证密码...');
       const isPasswordValid = await bcrypt.compare(password, user.password_hash);
       if (!isPasswordValid) {
+        console.log('❌ 密码错误');
         return res.status(401).json({
           success: false,
           error: 'INVALID_CREDENTIALS',
           message: '邮箱或密码错误',
         });
       }
+      console.log('✅ 密码验证成功');
 
       // 检查账户状态
+      console.log('📋 检查账户状态:', user.status);
       if (user.status === 'disabled') {
         return res.status(403).json({
           success: false,
@@ -152,14 +164,17 @@ class AuthController {
       }
 
       if (!user.email_verified) {
+        console.log('❌ 邮箱未验证');
         return res.status(403).json({
           success: false,
           error: 'EMAIL_NOT_VERIFIED',
           message: '请先验证您的邮箱地址',
         });
       }
+      console.log('✅ 账户状态正常');
 
       // 收集会话信息
+      console.log('📱 收集会话信息...');
       const sessionInfo = {
         ipAddress: req.ip || req.connection.remoteAddress,
         userAgent: req.get('User-Agent'),
@@ -168,35 +183,46 @@ class AuthController {
           timestamp: new Date(),
         },
       };
+      console.log('📱 会话信息:', sessionInfo);
 
       // 生成JWT令牌对
+      console.log('🔑 生成JWT令牌...');
       const tokens = await JWTUtils.generateTokenPair(user, sessionInfo);
+      console.log('✅ JWT令牌生成成功');
 
       // 更新用户登录信息
+      console.log('📊 更新用户登录信息...');
       await user.update({
         last_login_at: new Date(),
         login_count: user.login_count + 1,
       });
+      console.log('✅ 用户信息更新成功');
 
+      console.log('🎉 登录成功!');
       res.status(200).json({
-        success: true,
-        message: '登录成功',
-        data: {
-          user: {
-            id: user.id,
-            username: user.username,
-            email: user.email,
-            role: user.role,
-            status: user.status,
-            emailVerified: user.email_verified,
-            lastLoginAt: user.last_login_at,
-          },
-          tokens,
+        user: {
+          id: user.id,
+          username: user.username,
+          email: user.email,
+          first_name: user.first_name,
+          last_name: user.last_name,
+          avatar: user.avatar_url,
+          role: user.role,
+          status: user.status,
+          email_verified: user.email_verified,
+          created_at: user.created_at,
+          updated_at: user.updated_at,
         },
+        access_token: tokens.accessToken,
+        refresh_token: tokens.refreshToken,
+        expires_in: tokens.expiresIn,
+        token_type: tokens.tokenType,
+        message: '登录成功',
       });
 
     } catch (error) {
-      console.error('用户登录失败:', error);
+      console.error('💥 用户登录失败 - 详细错误:', error);
+      console.error('💥 错误堆栈:', error.stack);
       res.status(500).json({
         success: false,
         error: 'LOGIN_ERROR',

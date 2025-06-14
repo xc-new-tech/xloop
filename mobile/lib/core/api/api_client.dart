@@ -3,7 +3,7 @@ import 'package:flutter/foundation.dart';
 
 /// API客户端配置
 class ApiClient {
-  static const String _baseUrl = 'http://localhost:3000/api';
+  static const String _baseUrl = 'http://localhost:3001';
   static const int _connectTimeout = 5000;
   static const int _receiveTimeout = 10000;
   

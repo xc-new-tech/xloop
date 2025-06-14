@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:form_builder_validators/form_builder_validators.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/constants/route_constants.dart';
@@ -36,7 +37,7 @@ class _LoginPageState extends State<LoginPage> {
         listener: (context, state) {
           if (state is AuthLoginSuccess) {
             // 登录成功，导航到主页
-            Navigator.of(context).pushReplacementNamed(RouteConstants.home);
+            context.go('/home');
           } else if (state is AuthLoginFailure) {
             // 显示错误消息
             ScaffoldMessenger.of(context).showSnackBar(
@@ -96,7 +97,7 @@ class _LoginPageState extends State<LoginPage> {
                       text: '还没有账户？',
                       actionText: '立即注册',
                       onActionTap: () {
-                        Navigator.of(context).pushNamed(RouteConstants.register);
+                        context.pushNamed('register');
                       },
                     ),
                     
@@ -202,7 +203,7 @@ class _LoginPageState extends State<LoginPage> {
       alignment: Alignment.centerRight,
       child: TextButton(
         onPressed: () {
-          Navigator.of(context).pushNamed(RouteConstants.forgotPassword);
+          context.pushNamed('forgot-password');
         },
         child: Text(
           '忘记密码？',

@@ -1,5 +1,5 @@
 const { DataTypes } = require('sequelize');
-const sequelize = require('../config/database');
+const { sequelize } = require('../config/database');
 
 const FAQ = sequelize.define('FAQ', {
   id: {
@@ -108,22 +108,14 @@ const FAQ = sequelize.define('FAQ', {
   createdBy: {
     type: DataTypes.UUID,
     allowNull: false,
-    references: {
-      model: 'Users',
-      key: 'id'
-    },
-    onUpdate: 'CASCADE',
-    onDelete: 'CASCADE'
+    comment: '创建者用户ID（来自认证服务）'
+    // 注意：不直接引用Users表，因为用户信息在认证服务中
   },
   updatedBy: {
     type: DataTypes.UUID,
     allowNull: true,
-    references: {
-      model: 'Users',
-      key: 'id'
-    },
-    onUpdate: 'CASCADE',
-    onDelete: 'SET NULL'
+    comment: '更新者用户ID（来自认证服务）'
+    // 注意：不直接引用Users表，因为用户信息在认证服务中
   },
   metadata: {
     type: DataTypes.TEXT,
@@ -150,18 +142,19 @@ const FAQ = sequelize.define('FAQ', {
   timestamps: true,
   paranoid: true, // 软删除
   indexes: [
-    {
-      name: 'faq_question_search',
-      fields: ['question'],
-      using: 'gin',
-      operator: 'gin_trgm_ops'
-    },
-    {
-      name: 'faq_answer_search', 
-      fields: ['answer'],
-      using: 'gin',
-      operator: 'gin_trgm_ops'
-    },
+    // 暂时注释掉GIN索引，需要安装pg_trgm扩展后再启用
+    // {
+    //   name: 'faq_question_search',
+    //   fields: ['question'],
+    //   using: 'gin',
+    //   operator: 'gin_trgm_ops'
+    // },
+    // {
+    //   name: 'faq_answer_search', 
+    //   fields: ['answer'],
+    //   using: 'gin',
+    //   operator: 'gin_trgm_ops'
+    // },
     {
       name: 'faq_category_index',
       fields: ['category']
@@ -172,15 +165,15 @@ const FAQ = sequelize.define('FAQ', {
     },
     {
       name: 'faq_knowledge_base_index',
-      fields: ['knowledgeBaseId']
+      fields: ['knowledge_base_id']
     },
     {
       name: 'faq_created_by_index',
-      fields: ['createdBy']
+      fields: ['created_by']
     },
     {
       name: 'faq_composite_search',
-      fields: ['category', 'status', 'isPublic']
+      fields: ['category', 'status', 'is_public']
     }
   ],
   hooks: {
@@ -205,17 +198,8 @@ FAQ.associate = (models) => {
     as: 'knowledgeBase'
   });
 
-  // 关联创建者
-  FAQ.belongsTo(models.User, {
-    foreignKey: 'createdBy',
-    as: 'creator'
-  });
-
-  // 关联更新者
-  FAQ.belongsTo(models.User, {
-    foreignKey: 'updatedBy', 
-    as: 'updater'
-  });
+  // 注意：不关联用户模型，因为用户信息在认证服务中
+  // 如果需要用户信息，通过API调用认证服务获取
 };
 
 // 实例方法

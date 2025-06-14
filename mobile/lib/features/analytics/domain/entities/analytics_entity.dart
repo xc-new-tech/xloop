@@ -433,6 +433,11 @@ class SentimentAnalysis extends Equatable {
   final double neutral; // 0.0 - 1.0
   final double negative; // 0.0 - 1.0
 
+  // 添加百分比getter方法
+  double? get positivePercentage => positive * 100;
+  double? get neutralPercentage => neutral * 100;
+  double? get negativePercentage => negative * 100;
+
   @override
   List<Object> get props => [positive, neutral, negative];
 }

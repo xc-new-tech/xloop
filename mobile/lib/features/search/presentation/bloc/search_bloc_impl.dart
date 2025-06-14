@@ -5,22 +5,21 @@ import 'search_state.dart';
 /// 搜索BLoC的临时实现
 class SearchBlocImpl extends Bloc<SearchEvent, SearchState> {
   SearchBlocImpl() : super(const SearchInitial()) {
-    on<SearchTextChangedEvent>(_onSearchTextChanged);
-    on<SemanticSearchEvent>(_onSemanticSearch);
-    on<KeywordSearchEvent>(_onKeywordSearch);
-    on<HybridSearchEvent>(_onHybridSearch);
-    on<GetSearchSuggestionsEvent>(_onGetSearchSuggestions);
-    on<LoadSearchHistoryEvent>(_onLoadSearchHistory);
-    on<ClearSearchHistoryEvent>(_onClearSearchHistory);
-    on<ClearSearchResultsEvent>(_onClearSearchResults);
+    on<SearchPerformed>(_onSearchPerformed);
+    on<SearchDocumentsPerformed>(_onSearchDocuments);
+    on<SearchFaqsPerformed>(_onSearchFaqs);
+    on<RecommendationsRequested>(_onRecommendationsRequested);
+    on<SearchHistoryRequested>(_onLoadSearchHistory);
+    on<SearchHistoryCleared>(_onClearSearchHistory);
+    on<SearchResultsCleared>(_onClearSearchResults);
   }
 
-  void _onSearchTextChanged(SearchTextChangedEvent event, Emitter<SearchState> emit) {
+  void _onSearchPerformed(SearchPerformed event, Emitter<SearchState> emit) {
     // 临时实现
     emit(SearchLoading());
     // 模拟延迟
     Future.delayed(const Duration(milliseconds: 300), () {
-      emit(SearchLoaded(
+      emit(SearchResultsLoaded(
         results: [],
         query: event.query,
         hasMore: false,
@@ -29,11 +28,11 @@ class SearchBlocImpl extends Bloc<SearchEvent, SearchState> {
     });
   }
 
-  void _onSemanticSearch(SemanticSearchEvent event, Emitter<SearchState> emit) {
+  void _onSearchDocuments(SearchDocumentsPerformed event, Emitter<SearchState> emit) {
     emit(SearchLoading());
     // 临时实现 - 返回空结果
     Future.delayed(const Duration(seconds: 1), () {
-      emit(SearchLoaded(
+      emit(SearchResultsLoaded(
         results: [],
         query: event.query,
         hasMore: false,
@@ -42,11 +41,11 @@ class SearchBlocImpl extends Bloc<SearchEvent, SearchState> {
     });
   }
 
-  void _onKeywordSearch(KeywordSearchEvent event, Emitter<SearchState> emit) {
+  void _onSearchFaqs(SearchFaqsPerformed event, Emitter<SearchState> emit) {
     emit(SearchLoading());
     // 临时实现 - 返回空结果
     Future.delayed(const Duration(seconds: 1), () {
-      emit(SearchLoaded(
+      emit(SearchResultsLoaded(
         results: [],
         query: event.query,
         hasMore: false,
@@ -55,35 +54,30 @@ class SearchBlocImpl extends Bloc<SearchEvent, SearchState> {
     });
   }
 
-  void _onHybridSearch(HybridSearchEvent event, Emitter<SearchState> emit) {
+  void _onRecommendationsRequested(RecommendationsRequested event, Emitter<SearchState> emit) {
     emit(SearchLoading());
     // 临时实现 - 返回空结果
     Future.delayed(const Duration(seconds: 1), () {
-      emit(SearchLoaded(
+      emit(SearchResultsLoaded(
         results: [],
-        query: event.query,
+        query: '',
         hasMore: false,
         totalCount: 0,
       ));
     });
   }
 
-  void _onGetSearchSuggestions(GetSearchSuggestionsEvent event, Emitter<SearchState> emit) {
-    // 临时实现 - 返回空建议
-    emit(SearchSuggestionsLoaded(suggestions: []));
-  }
-
-  void _onLoadSearchHistory(LoadSearchHistoryEvent event, Emitter<SearchState> emit) {
+  void _onLoadSearchHistory(SearchHistoryRequested event, Emitter<SearchState> emit) {
     // 临时实现 - 返回空历史
     emit(SearchHistoryLoaded(history: []));
   }
 
-  void _onClearSearchHistory(ClearSearchHistoryEvent event, Emitter<SearchState> emit) {
+  void _onClearSearchHistory(SearchHistoryCleared event, Emitter<SearchState> emit) {
     // 临时实现
     emit(SearchHistoryLoaded(history: []));
   }
 
-  void _onClearSearchResults(ClearSearchResultsEvent event, Emitter<SearchState> emit) {
+  void _onClearSearchResults(SearchResultsCleared event, Emitter<SearchState> emit) {
     emit(const SearchInitial());
   }
 } 

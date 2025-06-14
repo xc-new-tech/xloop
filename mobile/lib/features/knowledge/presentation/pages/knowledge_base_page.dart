@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/di/service_locator.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/loading_widget.dart';
+import '../../domain/entities/knowledge_base.dart';
 import '../bloc/knowledge_base_bloc.dart';
 import '../bloc/knowledge_base_event.dart';
 import '../bloc/knowledge_base_state.dart';
@@ -18,7 +19,7 @@ class KnowledgeBasePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (context) => getIt<KnowledgeBaseBloc>()..add(const LoadKnowledgeBasesEvent()),
+      create: (context) => sl<KnowledgeBaseBloc>()..add(const LoadKnowledgeBasesEvent()),
       child: const _KnowledgeBasePageContent(),
     );
   }
@@ -280,7 +281,7 @@ class _KnowledgeBasePageContentState extends State<_KnowledgeBasePageContent> {
                   );
                 }
                 
-                if (state is KnowledgeBaseLoaded) {
+                if (state is KnowledgeBaseListLoaded) {
                   if (state.knowledgeBases.isEmpty) {
                     return _buildEmptyState();
                   }
@@ -328,7 +329,7 @@ class _KnowledgeBasePageContentState extends State<_KnowledgeBasePageContent> {
   Widget _buildStatsBar() {
     return BlocBuilder<KnowledgeBaseBloc, KnowledgeBaseState>(
       builder: (context, state) {
-        if (state is KnowledgeBaseLoaded) {
+        if (state is KnowledgeBaseListLoaded) {
           final total = state.knowledgeBases.length;
           final active = state.knowledgeBases.where((kb) => kb.isActive).length;
           final private = state.knowledgeBases.where((kb) => !kb.isPublic).length;
@@ -470,7 +471,7 @@ class _KnowledgeBasePageContentState extends State<_KnowledgeBasePageContent> {
           TextButton(
             onPressed: () {
               Navigator.of(context).pop();
-              context.read<KnowledgeBaseBloc>().add(DeleteKnowledgeBaseEvent(id: knowledgeBase.id));
+              context.read<KnowledgeBaseBloc>().add(DeleteKnowledgeBaseEvent(knowledgeBase.id));
             },
             style: TextButton.styleFrom(foregroundColor: AppColors.error),
             child: const Text('删除'),
@@ -593,6 +594,7 @@ class _KnowledgeBasePageContentState extends State<_KnowledgeBasePageContent> {
                 
                 if (knowledgeBase == null) {
                   context.read<KnowledgeBaseBloc>().add(CreateKnowledgeBaseEvent(
+                    type: KnowledgeBaseType.personal,
                     name: name,
                     description: description,
                     isPublic: isPublic,

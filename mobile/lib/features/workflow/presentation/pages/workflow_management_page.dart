@@ -664,7 +664,7 @@ class _WorkflowManagementPageState extends State<WorkflowManagementPage>
                   child: _buildExecutionStatCard(
                     '失败',
                     '$failedCount',
-                    Icons.error_circle,
+                    Icons.error,
                     AppColors.error,
                   ),
                 ),
@@ -818,7 +818,7 @@ class _WorkflowManagementPageState extends State<WorkflowManagementPage>
         color = AppColors.success;
         break;
       case ExecutionStatus.failed:
-        icon = Icons.error_circle;
+        icon = Icons.error;
         color = AppColors.error;
         break;
       case ExecutionStatus.paused:

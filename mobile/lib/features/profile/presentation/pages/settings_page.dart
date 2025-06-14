@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/theme/app_colors.dart';
-import '../../../auth/presentation/bloc/auth_bloc.dart';
+import '../../../auth/presentation/blocs/auth_bloc.dart';
+import '../../../auth/presentation/blocs/auth_event.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -53,7 +54,7 @@ class _SettingsPageState extends State<SettingsPage> {
                   title: const Text('退出登录'),
                   leading: const Icon(Icons.logout),
                   onTap: () {
-                    context.read<AuthBloc>().add(AuthLogoutEvent());
+                    context.read<AuthBloc>().add(const AuthLogoutRequested());
                   },
                 ),
               ],
