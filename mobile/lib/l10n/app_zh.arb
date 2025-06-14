@@ -1,0 +1,138 @@
+{
+  "@@locale": "zh",
+  
+  "appName": "XLoop知识智能平台",
+  "@appName": {
+    "description": "应用名称"
+  },
+  
+  "welcome": "欢迎",
+  "@welcome": {
+    "description": "欢迎文本"
+  },
+  
+  "login": "登录",
+  "@login": {
+    "description": "登录按钮文本"
+  },
+  
+  "logout": "登出",
+  "@logout": {
+    "description": "登出按钮文本"
+  },
+  
+  "register": "注册",
+  "@register": {
+    "description": "注册按钮文本"
+  },
+  
+  "email": "邮箱",
+  "@email": {
+    "description": "邮箱输入框标签"
+  },
+  
+  "password": "密码",
+  "@password": {
+    "description": "密码输入框标签"
+  },
+  
+  "confirmPassword": "确认密码",
+  "@confirmPassword": {
+    "description": "确认密码输入框标签"
+  },
+  
+  "username": "用户名",
+  "@username": {
+    "description": "用户名输入框标签"
+  },
+  
+  "submit": "提交",
+  "@submit": {
+    "description": "提交按钮文本"
+  },
+  
+  "cancel": "取消",
+  "@cancel": {
+    "description": "取消按钮文本"
+  },
+  
+  "confirm": "确认",
+  "@confirm": {
+    "description": "确认按钮文本"
+  },
+  
+  "save": "保存",
+  "@save": {
+    "description": "保存按钮文本"
+  },
+  
+  "delete": "删除",
+  "@delete": {
+    "description": "删除按钮文本"
+  },
+  
+  "edit": "编辑",
+  "@edit": {
+    "description": "编辑按钮文本"
+  },
+  
+  "settings": "设置",
+  "@settings": {
+    "description": "设置页面标题"
+  },
+  
+  "profile": "个人资料",
+  "@profile": {
+    "description": "个人资料页面标题"
+  },
+  
+  "knowledgeBase": "知识库",
+  "@knowledgeBase": {
+    "description": "知识库页面标题"
+  },
+  
+  "chat": "聊天",
+  "@chat": {
+    "description": "聊天页面标题"
+  },
+  
+  "search": "搜索",
+  "@search": {
+    "description": "搜索功能标签"
+  },
+  
+  "loading": "加载中...",
+  "@loading": {
+    "description": "加载状态文本"
+  },
+  
+  "networkError": "网络连接错误",
+  "@networkError": {
+    "description": "网络错误提示"
+  },
+  
+  "unknownError": "未知错误",
+  "@unknownError": {
+    "description": "未知错误提示"
+  },
+  
+  "retry": "重试",
+  "@retry": {
+    "description": "重试按钮文本"
+  },
+  
+  "noData": "暂无数据",
+  "@noData": {
+    "description": "无数据状态文本"
+  },
+  
+  "pullToRefresh": "下拉刷新",
+  "@pullToRefresh": {
+    "description": "下拉刷新文本"
+  },
+  
+  "releaseToRefresh": "释放刷新",
+  "@releaseToRefresh": {
+    "description": "释放刷新文本"
+  }
+} 

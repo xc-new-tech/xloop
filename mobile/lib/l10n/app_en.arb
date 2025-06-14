@@ -1,0 +1,138 @@
+{
+  "@@locale": "en",
+  
+  "appName": "XLoop Knowledge Platform",
+  "@appName": {
+    "description": "Application name"
+  },
+  
+  "welcome": "Welcome",
+  "@welcome": {
+    "description": "Welcome text"
+  },
+  
+  "login": "Login",
+  "@login": {
+    "description": "Login button text"
+  },
+  
+  "logout": "Logout",
+  "@logout": {
+    "description": "Logout button text"
+  },
+  
+  "register": "Register",
+  "@register": {
+    "description": "Register button text"
+  },
+  
+  "email": "Email",
+  "@email": {
+    "description": "Email input field label"
+  },
+  
+  "password": "Password",
+  "@password": {
+    "description": "Password input field label"
+  },
+  
+  "confirmPassword": "Confirm Password",
+  "@confirmPassword": {
+    "description": "Confirm password input field label"
+  },
+  
+  "username": "Username",
+  "@username": {
+    "description": "Username input field label"
+  },
+  
+  "submit": "Submit",
+  "@submit": {
+    "description": "Submit button text"
+  },
+  
+  "cancel": "Cancel",
+  "@cancel": {
+    "description": "Cancel button text"
+  },
+  
+  "confirm": "Confirm",
+  "@confirm": {
+    "description": "Confirm button text"
+  },
+  
+  "save": "Save",
+  "@save": {
+    "description": "Save button text"
+  },
+  
+  "delete": "Delete",
+  "@delete": {
+    "description": "Delete button text"
+  },
+  
+  "edit": "Edit",
+  "@edit": {
+    "description": "Edit button text"
+  },
+  
+  "settings": "Settings",
+  "@settings": {
+    "description": "Settings page title"
+  },
+  
+  "profile": "Profile",
+  "@profile": {
+    "description": "Profile page title"
+  },
+  
+  "knowledgeBase": "Knowledge Base",
+  "@knowledgeBase": {
+    "description": "Knowledge base page title"
+  },
+  
+  "chat": "Chat",
+  "@chat": {
+    "description": "Chat page title"
+  },
+  
+  "search": "Search",
+  "@search": {
+    "description": "Search function label"
+  },
+  
+  "loading": "Loading...",
+  "@loading": {
+    "description": "Loading state text"
+  },
+  
+  "networkError": "Network connection error",
+  "@networkError": {
+    "description": "Network error message"
+  },
+  
+  "unknownError": "Unknown error",
+  "@unknownError": {
+    "description": "Unknown error message"
+  },
+  
+  "retry": "Retry",
+  "@retry": {
+    "description": "Retry button text"
+  },
+  
+  "noData": "No data available",
+  "@noData": {
+    "description": "No data state text"
+  },
+  
+  "pullToRefresh": "Pull to refresh",
+  "@pullToRefresh": {
+    "description": "Pull to refresh text"
+  },
+  
+  "releaseToRefresh": "Release to refresh",
+  "@releaseToRefresh": {
+    "description": "Release to refresh text"
+  }
+} 

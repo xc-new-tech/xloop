@@ -1,0 +1,174 @@
+name: mobile
+description: "XLoop知识智能平台移动端应用"
+# The following line prevents the package from being accidentally published to
+# pub.dev using `flutter pub publish`. This is preferred for private packages.
+publish_to: 'none' # Remove this line if you wish to publish to pub.dev
+
+# The following defines the version and build number for your application.
+# A version number is three numbers separated by dots, like 1.2.43
+# followed by an optional build number separated by a +.
+# Both the version and the builder number may be overridden in flutter
+# build by specifying --build-name and --build-number, respectively.
+# In Android, build-name is used as versionName while build-number used as versionCode.
+# Read more about Android versioning at https://developer.android.com/studio/publish/versioning
+# In iOS, build-name is used as CFBundleShortVersionString while build-number is used as CFBundleVersion.
+# Read more about iOS versioning at
+# https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
+# In Windows, build-name is used as the major, minor, and patch parts
+# of the product and file versions while build-number is used as the build suffix.
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.8.1
+
+# Dependencies specify other packages that your package needs in order to work.
+# To automatically upgrade your package dependencies to the latest versions
+# consider running `flutter pub upgrade --major-versions`. Alternatively,
+# dependencies can be manually updated by changing the version numbers below to
+# the latest version available on pub.dev. To see which dependencies have newer
+# versions available, run `flutter pub outdated`.
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:  # 国际化支持
+    sdk: flutter
+
+  # The following adds the Cupertino Icons font to your application.
+  # Use with the CupertinoIcons class for iOS style icons.
+  cupertino_icons: ^1.0.8
+
+  # UI相关
+  flutter_screenutil: ^5.9.0  # 屏幕适配
+  flutter_svg: ^2.0.9  # SVG图标支持
+  cached_network_image: ^3.3.1  # 网络图片缓存
+  shimmer: ^3.0.0  # 加载动画效果
+  pull_to_refresh: ^2.0.0  # 下拉刷新
+  dotted_border: ^2.1.0  # 虚线边框
+  mime: ^1.0.4  # MIME类型检测
+  
+  # 路由管理
+  go_router: ^14.2.0  # 官方推荐的路由管理
+  
+  # 状态管理
+  flutter_bloc: ^8.1.6  # BLoC状态管理
+  bloc: ^8.1.4
+  equatable: ^2.0.5  # 对象比较
+  hydrated_bloc: ^9.1.5  # 状态持久化
+  
+  # 网络请求
+  dio: ^5.4.0  # HTTP客户端
+  pretty_dio_logger: ^1.3.1  # 请求日志
+  retrofit: ^4.0.3  # 网络请求注解
+  json_annotation: ^4.9.0  # JSON序列化注解
+  dartz: ^0.10.1  # 函数式编程库
+  
+  # 本地存储
+  flutter_secure_storage: ^9.0.0  # 安全存储（Token等）
+  shared_preferences: ^2.2.2  # 普通存储
+  sqflite: ^2.3.0  # SQLite数据库
+  path: ^1.9.0  # 路径操作
+  path_provider: ^2.1.2  # 路径提供器
+  
+  # 工具类
+  get_it: ^8.0.3  # 依赖注入
+  logger: ^2.0.2+1  # 日志工具
+  uuid: ^4.3.3  # UUID生成
+  
+  # 表单验证
+  form_builder_validators: ^11.1.2
+  flutter_form_builder: ^10.0.1
+  
+  # 文件操作
+  file_picker: ^8.0.0+1  # 文件选择器
+  image_picker: ^1.0.7  # 图片选择器
+  open_file: ^3.3.2  # 文件打开
+  permission_handler: ^11.3.0  # 权限管理
+  
+  # 其他工具
+  connectivity_plus: ^6.0.5  # 网络连接检测
+  jwt_decode: ^0.3.1  # JWT解码
+  package_info_plus: ^4.2.0  # 应用信息
+  device_info_plus: ^10.1.0  # 设备信息
+  url_launcher: ^6.2.5  # URL启动器
+  
+  # 国际化
+  intl: ^0.20.2  # 国际化支持
+  
+  # 动画效果
+  animations: ^2.0.11  # Material动画组件
+  lottie: ^3.1.0  # Lottie动画
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+  # The "flutter_lints" package below contains a set of recommended lints to
+  # encourage good coding practices. The lint set provided by the package is
+  # activated in the `analysis_options.yaml` file located at the root of your
+  # package. See that file for information about deactivating specific lint
+  # rules and activating additional ones.
+  flutter_lints: ^6.0.0
+  
+  # 代码生成
+  build_runner: ^2.4.9
+  json_serializable: ^6.8.0
+  retrofit_generator: ^8.0.6  # Retrofit代码生成
+  
+  # 测试相关
+  mockito: ^5.4.4  # Mock框架
+  bloc_test: ^9.1.7  # BLoC测试工具
+  http_mock_adapter: ^0.6.1  # HTTP Mock
+  integration_test: # 集成测试
+    sdk: flutter
+
+# For information on the generic Dart part of this file, see the
+# following page: https://dart.dev/tools/pub/pubspec
+
+# The following section is specific to Flutter packages.
+flutter:
+  # 启用国际化生成
+  generate: true
+
+  # The following line ensures that the Material Icons font is
+  # included with your application, so that you can use the icons in
+  # the material Icons class.
+  uses-material-design: true
+
+  # 添加资源文件目录
+  assets:
+    - assets/images/
+    - assets/icons/
+    - assets/lottie/
+    - assets/data/
+
+  # An image asset can refer to one or more resolution-specific "variants", see
+  # https://flutter.dev/to/resolution-aware-images
+
+  # For details regarding adding assets from package dependencies, see
+  # https://flutter.dev/to/asset-from-package
+
+  # To add custom fonts to your application, add a fonts section here,
+  # in this "flutter" section. Each entry in this list should have a
+  # "family" key with the font family name, and a "fonts" key with a
+  # list giving the asset and other descriptors for the font. For
+  # example:
+  fonts:
+    - family: PingFang
+      fonts:
+        - asset: assets/fonts/PingFang-Regular.ttf
+        - asset: assets/fonts/PingFang-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/PingFang-Semibold.ttf
+          weight: 600
+        - asset: assets/fonts/PingFang-Bold.ttf
+          weight: 700
+    - family: Roboto
+      fonts:
+        - asset: assets/fonts/Roboto-Regular.ttf
+        - asset: assets/fonts/Roboto-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/Roboto-Bold.ttf
+          weight: 700
+  #
+  # For details regarding fonts from package dependencies,
+  # see https://flutter.dev/to/font-from-package

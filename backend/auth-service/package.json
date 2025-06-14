@@ -1,0 +1,58 @@
+{
+  "name": "xloop-auth-service",
+  "version": "1.0.0",
+  "description": "XLoop 知识智能平台用户认证服务",
+  "main": "src/app.js",
+  "scripts": {
+    "start": "node src/app.js",
+    "dev": "nodemon src/app.js",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "db:init": "node src/scripts/init-db.js",
+    "db:init:force": "node src/scripts/init-db.js --force",
+    "db:migrate": "node src/scripts/migrate.js migrate",
+    "db:rollback": "node src/scripts/migrate.js rollback",
+    "db:status": "node src/scripts/migrate.js status"
+  },
+  "keywords": [
+    "auth",
+    "jwt",
+    "api",
+    "xloop"
+  ],
+  "author": "XLoop Team",
+  "license": "MIT",
+  "type": "commonjs",
+  "dependencies": {
+    "bcrypt": "^5.1.1",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "express-rate-limit": "^7.4.1",
+    "express-validator": "^7.2.0",
+    "helmet": "^8.0.0",
+    "jsonwebtoken": "^9.0.2",
+    "nodemailer": "^6.9.17",
+    "passport": "^0.7.0",
+    "passport-jwt": "^4.0.1",
+    "passport-local": "^1.0.0",
+    "pg": "^8.13.1",
+    "pg-hstore": "^2.3.4",
+    "sequelize": "^6.37.5",
+    "uuid": "^11.0.3"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "nodemon": "^3.1.9",
+    "sqlite3": "^5.1.7",
+    "supertest": "^7.0.0"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "collectCoverageFrom": [
+      "src/**/*.js",
+      "!src/config/**"
+    ]
+  }
+}
