@@ -78,8 +78,8 @@ const createKnowledgeBase = async (req, res) => {
       });
     }
 
-    // TODO: 从JWT token中获取用户ID，这里暂时使用模拟值
-    const userId = req.user?.id || 'mock-user-id';
+    // TODO: 从JWT token中获取用户ID，这里暂时使用模拟UUID
+    const userId = req.user?.id || '00000000-0000-0000-0000-000000000001';
 
     // 创建知识库
     const knowledgeBase = await KnowledgeBase.create({

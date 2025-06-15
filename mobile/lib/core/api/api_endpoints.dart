@@ -3,7 +3,7 @@ class ApiEndpoints {
   ApiEndpoints._();
 
   // 基础URL
-  static const String baseUrl = 'http://localhost:3000/api';
+  static const String baseUrl = 'http://localhost:3002/api';
   
   // 认证相关
   static const String authBaseUrl = '$baseUrl/auth';

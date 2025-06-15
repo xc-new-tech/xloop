@@ -1,21 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:go_router/go_router.dart';
 
-import '../../../../core/di/service_locator.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/loading_widget.dart';
-import '../../../../shared/widgets/custom_button.dart';
 import '../bloc/search_bloc.dart';
 import '../bloc/search_event.dart';
 import '../bloc/search_state.dart';
-import '../widgets/search_result_card.dart';
 import '../widgets/search_filter_widget.dart';
-import '../widgets/search_suggestions_widget.dart';
+import '../widgets/search_result_item.dart';
 import '../../domain/entities/search_result.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../features/shared/presentation/widgets/custom_app_bar.dart';
 import '../../../../features/shared/presentation/widgets/error_widget.dart';
+
+/// 搜索模式枚举
+enum SearchMode {
+  semantic,
+  keyword,
+  hybrid,
+}
 
 /// 语义搜索页面
 class SemanticSearchPage extends StatefulWidget {
@@ -68,7 +71,7 @@ class _SemanticSearchPageState extends State<SemanticSearchPage>
   }
 
   void _loadSearchHistory() {
-    context.read<SearchBloc>().add(const LoadSearchHistoryEvent());
+    context.read<SearchBloc>().add(const SearchHistoryRequested());
   }
 
   void _performSearch() {
@@ -82,19 +85,28 @@ class _SemanticSearchPageState extends State<SemanticSearchPage>
   SearchEvent _getSearchEvent() {
     switch (_searchMode) {
       case SearchMode.semantic:
-        return SemanticSearchEvent(
+        return SearchPerformed(
           query: _currentQuery,
-          knowledgeBaseId: widget.knowledgeBaseId,
+          options: SearchOptions(
+            knowledgeBaseId: widget.knowledgeBaseId,
+            type: SearchResultType.mixed,
+          ),
         );
       case SearchMode.keyword:
-        return KeywordSearchEvent(
+        return SearchDocumentsPerformed(
           query: _currentQuery,
-          knowledgeBaseId: widget.knowledgeBaseId,
+          options: SearchOptions(
+            knowledgeBaseId: widget.knowledgeBaseId,
+            type: SearchResultType.document,
+          ),
         );
       case SearchMode.hybrid:
-        return HybridSearchEvent(
+        return SearchPerformed(
           query: _currentQuery,
-          knowledgeBaseId: widget.knowledgeBaseId,
+          options: SearchOptions(
+            knowledgeBaseId: widget.knowledgeBaseId,
+            type: SearchResultType.mixed,
+          ),
         );
     }
   }
@@ -282,7 +294,7 @@ class _SemanticSearchPageState extends State<SemanticSearchPage>
                         setState(() {
                           _currentQuery = '';
                         });
-                        context.read<SearchBloc>().add(const ClearSearchResultsEvent());
+                        context.read<SearchBloc>().add(const SearchResultsCleared());
                       },
                       icon: const Icon(Icons.clear),
                     ),
@@ -305,10 +317,7 @@ class _SemanticSearchPageState extends State<SemanticSearchPage>
               setState(() {
                 _currentQuery = value;
               });
-              // 获取搜索建议
-              if (value.trim().isNotEmpty) {
-                context.read<SearchBloc>().add(GetSearchSuggestionsEvent(value.trim()));
-              }
+              // TODO: 实现搜索建议功能
             },
             onSubmitted: (value) {
               setState(() {
@@ -321,23 +330,7 @@ class _SemanticSearchPageState extends State<SemanticSearchPage>
           // 搜索建议
           BlocBuilder<SearchBloc, SearchState>(
             builder: (context, state) {
-              if (state is SearchSuggestionsLoaded && 
-                  state.suggestions.isNotEmpty && 
-                  _searchFocusNode.hasFocus) {
-                return Container(
-                  margin: const EdgeInsets.only(top: 8),
-                  child: SearchSuggestionWidget(
-                    suggestions: state.suggestions,
-                    onSuggestionSelected: (suggestion) {
-                      _searchController.text = suggestion;
-                      setState(() {
-                        _currentQuery = suggestion;
-                      });
-                      _performSearch();
-                    },
-                  ),
-                );
-              }
+              // TODO: 实现搜索建议状态处理
               return const SizedBox.shrink();
             },
           ),
@@ -462,17 +455,17 @@ class _SemanticSearchPageState extends State<SemanticSearchPage>
           );
         }
 
-        if (state is SearchLoaded) {
+        if (state is SearchSuccess) {
           return TabBarView(
             controller: _tabController,
             children: [
-              _buildResultsList(state.results, 'all'),
+              _buildResultsList(_getAllResults(state), 'all'),
               _buildResultsList(
-                state.results.where((r) => r.type == SearchResultType.document).toList(),
+                _getDocumentResults(state),
                 'documents',
               ),
               _buildResultsList(
-                state.results.where((r) => r.type == SearchResultType.faq).toList(),
+                _getFaqResults(state),
                 'faqs',
               ),
             ],
@@ -612,7 +605,7 @@ class _SemanticSearchPageState extends State<SemanticSearchPage>
         final result = results[index];
         return SearchResultItem(
           result: result,
-          query: _currentQuery,
+          searchQuery: _currentQuery,
           onTap: () => _openResult(result),
         );
       },
@@ -628,8 +621,8 @@ class _SemanticSearchPageState extends State<SemanticSearchPage>
       case SearchResultType.faq:
         // 打开FAQ详情页
         break;
-      case SearchResultType.conversation:
-        // 打开对话记录
+      case SearchResultType.mixed:
+        // 打开混合搜索结果页
         break;
     }
   }
@@ -677,11 +670,39 @@ class _SemanticSearchPageState extends State<SemanticSearchPage>
         return '输入查询内容...';
     }
   }
-}
 
-/// 搜索模式枚举
-enum SearchMode {
-  semantic,
-  keyword,
-  hybrid,
+  List<SearchResult> _getAllResults(SearchSuccess state) {
+    final List<SearchResult> allResults = [];
+    if (state.hybridResults != null) {
+      allResults.addAll(state.hybridResults!.documents);
+      allResults.addAll(state.hybridResults!.faqs);
+    }
+    if (state.documentResults != null) {
+      allResults.addAll(state.documentResults!);
+    }
+    if (state.faqResults != null) {
+      allResults.addAll(state.faqResults!);
+    }
+    return allResults;
+  }
+
+  List<SearchResult> _getDocumentResults(SearchSuccess state) {
+    if (state.hybridResults != null) {
+      return state.hybridResults!.documents.cast<SearchResult>();
+    }
+    if (state.documentResults != null) {
+      return state.documentResults!.cast<SearchResult>();
+    }
+    return [];
+  }
+
+  List<SearchResult> _getFaqResults(SearchSuccess state) {
+    if (state.hybridResults != null) {
+      return state.hybridResults!.faqs.cast<SearchResult>();
+    }
+    if (state.faqResults != null) {
+      return state.faqResults!.cast<SearchResult>();
+    }
+    return [];
+  }
 } 

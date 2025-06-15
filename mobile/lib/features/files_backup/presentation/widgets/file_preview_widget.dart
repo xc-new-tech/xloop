@@ -3,16 +3,17 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../bloc/file_bloc.dart';
-import '../../domain/entities/file_entity.dart';
+import '../bloc/file_event.dart';
+import '../../domain/entities/file_entity.dart' as entity;
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/constants/file_constants.dart';
 
 /// 文件预览组件
 class FilePreviewWidget extends StatelessWidget {
-  final List<FileEntity> files;
+  final List<entity.FileEntity> files;
   final VoidCallback? onRefresh;
-  final ValueChanged<FileEntity>? onFileSelected;
+  final ValueChanged<entity.FileEntity>? onFileSelected;
   final bool showActions;
 
   const FilePreviewWidget({
@@ -69,7 +70,7 @@ class FilePreviewWidget extends StatelessWidget {
     );
   }
 
-  Widget _buildFileItem(BuildContext context, FileEntity file) {
+  Widget _buildFileItem(BuildContext context, entity.FileEntity file) {
     return Card(
       elevation: 2,
       shape: RoundedRectangleBorder(
@@ -98,7 +99,7 @@ class FilePreviewWidget extends StatelessWidget {
     );
   }
 
-  Widget _buildFileIcon(FileEntity file) {
+  Widget _buildFileIcon(entity.FileEntity file) {
     final fileType = FileConstants.getFileType(file.extension);
     final iconData = _getFileTypeIcon(fileType);
     final color = _getFileTypeColor(fileType);
@@ -118,7 +119,7 @@ class FilePreviewWidget extends StatelessWidget {
     );
   }
 
-  Widget _buildFileInfo(FileEntity file) {
+  Widget _buildFileInfo(entity.FileEntity file) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -150,10 +151,10 @@ class FilePreviewWidget extends StatelessWidget {
             ),
           ],
         ),
-        if (file.description?.isNotEmpty == true) ...[
+        if (file.extractedText?.isNotEmpty == true) ...[
           const SizedBox(height: 4),
           Text(
-            file.description!,
+            file.extractedText!,
             style: AppTextStyles.bodySmall.copyWith(
               color: AppColors.textSecondary,
             ),
@@ -165,7 +166,7 @@ class FilePreviewWidget extends StatelessWidget {
     );
   }
 
-  Widget _buildStatusChip(FileStatus status) {
+  Widget _buildStatusChip(entity.FileStatus status) {
     final statusInfo = _getStatusInfo(status);
     
     return Container(
@@ -200,7 +201,7 @@ class FilePreviewWidget extends StatelessWidget {
     );
   }
 
-  Widget _buildFileActions(BuildContext context, FileEntity file) {
+  Widget _buildFileActions(BuildContext context, entity.FileEntity file) {
     return PopupMenuButton<String>(
       icon: const Icon(Icons.more_vert),
       onSelected: (action) => _handleFileAction(context, file, action),
@@ -235,7 +236,7 @@ class FilePreviewWidget extends StatelessWidget {
             ],
           ),
         ),
-        if (file.status == FileStatus.failed) ...[
+        if (file.status == entity.FileStatus.failed) ...[
           const PopupMenuItem(
             value: 'retry',
             child: Row(
@@ -262,7 +263,7 @@ class FilePreviewWidget extends StatelessWidget {
     );
   }
 
-  void _handleFileAction(BuildContext context, FileEntity file, String action) {
+  void _handleFileAction(BuildContext context, entity.FileEntity file, String action) {
     switch (action) {
       case 'preview':
         _previewFile(context, file);
@@ -282,31 +283,31 @@ class FilePreviewWidget extends StatelessWidget {
     }
   }
 
-  void _previewFile(BuildContext context, FileEntity file) {
+  void _previewFile(BuildContext context, entity.FileEntity file) {
     // 实现文件预览
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text('预览文件: ${file.originalName}')),
     );
   }
 
-  void _downloadFile(BuildContext context, FileEntity file) {
+  void _downloadFile(BuildContext context, entity.FileEntity file) {
     // 实现文件下载
-    context.read<FileBloc>().add(DownloadFileEvent(fileId: file.id));
+    context.read<FileBloc>().add(DownloadFileEvent(fileId: file.id, savePath: '/tmp/${file.originalName}'));
   }
 
-  void _shareFile(BuildContext context, FileEntity file) {
+  void _shareFile(BuildContext context, entity.FileEntity file) {
     // 实现文件分享
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text('分享文件: ${file.originalName}')),
     );
   }
 
-  void _retryUpload(BuildContext context, FileEntity file) {
-    // 重试上传
-    context.read<FileBloc>().add(RetryUploadEvent(fileId: file.id));
+  void _retryUpload(BuildContext context, entity.FileEntity file) {
+    // 重试上传 - 使用重新解析事件
+    context.read<FileBloc>().add(ReparseFileEvent(file.id));
   }
 
-  void _deleteFile(BuildContext context, FileEntity file) {
+  void _deleteFile(BuildContext context, entity.FileEntity file) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -320,7 +321,7 @@ class FilePreviewWidget extends StatelessWidget {
           TextButton(
             onPressed: () {
               Navigator.of(context).pop();
-              context.read<FileBloc>().add(DeleteFileEvent(fileId: file.id));
+              context.read<FileBloc>().add(DeleteFileEvent(file.id));
             },
             style: TextButton.styleFrom(
               foregroundColor: Colors.red,
@@ -366,43 +367,31 @@ class FilePreviewWidget extends StatelessWidget {
     }
   }
 
-  ({String text, Color color, IconData? icon}) _getStatusInfo(FileStatus status) {
+  ({String text, Color color, IconData? icon}) _getStatusInfo(entity.FileStatus status) {
     switch (status) {
-      case FileStatus.pending:
-        return (
-          text: '等待中',
-          color: AppColors.warning,
-          icon: Icons.schedule,
-        );
-      case FileStatus.uploading:
+      case entity.FileStatus.uploading:
         return (
           text: '上传中',
           color: AppColors.info,
           icon: Icons.cloud_upload,
         );
-      case FileStatus.processing:
+      case entity.FileStatus.processing:
         return (
           text: '处理中',
           color: AppColors.info,
           icon: Icons.sync,
         );
-      case FileStatus.completed:
+      case entity.FileStatus.processed:
         return (
           text: '已完成',
           color: AppColors.success,
           icon: Icons.check_circle,
         );
-      case FileStatus.failed:
+      case entity.FileStatus.failed:
         return (
           text: '失败',
           color: AppColors.error,
           icon: Icons.error,
-        );
-      case FileStatus.deleted:
-        return (
-          text: '已删除',
-          color: AppColors.textSecondary,
-          icon: Icons.delete,
         );
     }
   }

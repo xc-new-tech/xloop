@@ -129,14 +129,14 @@ class MessageBubble extends StatelessWidget {
                   children: [
                     // 时间戳
                     Text(
-                      _formatTime(message.createdAt),
+                      _formatTime(message.timestamp),
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: Colors.grey[600],
                       ),
                     ),
                     
                     // Token使用量（仅AI消息）
-                    if (!isUser && message.tokenUsage != null) ...[
+                    if (!isUser && message.tokens != null) ...[
                       const SizedBox(width: 8),
                       Icon(
                         Icons.memory,
@@ -145,7 +145,7 @@ class MessageBubble extends StatelessWidget {
                       ),
                       const SizedBox(width: 2),
                       Text(
-                        '${message.tokenUsage!.totalTokens}',
+                        '${message.tokens!.totalTokens}',
                         style: theme.textTheme.bodySmall?.copyWith(
                           color: Colors.grey[600],
                         ),

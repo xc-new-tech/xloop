@@ -4,7 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/custom_app_bar.dart';
 import '../../../../core/widgets/loading_widget.dart';
-import '../../../../core/widgets/error_widget.dart' as core;
+import '../../../shared/presentation/widgets/error_widget.dart';
 import '../bloc/data_management_bloc.dart';
 import '../bloc/data_management_event.dart';
 import '../bloc/data_management_state.dart';
@@ -160,7 +160,7 @@ class _DataDashboardPageState extends State<DataDashboardPage>
         }
 
         if (state is DataManagementError) {
-          return core.ErrorWidget(
+          return AppErrorWidget(
             message: state.message,
             onRetry: _refreshData,
           );
@@ -216,16 +216,14 @@ class _DataDashboardPageState extends State<DataDashboardPage>
                     children: [
                       Expanded(
                         child: BackupStatusCard(
-                          backup: state.backupStatus,
-                          onCreateBackup: _createBackup,
-                          onViewBackups: () => _tabController.animateTo(1),
+                          status: state.backupStatus,
+                          onViewDetails: () => _tabController.animateTo(1),
                         ),
                       ),
                       const SizedBox(width: 16),
                       Expanded(
                         child: SyncStatusCard(
-                          sync: state.syncStatus,
-                          onForceSync: _forceSync,
+                          status: state.syncStatus,
                           onViewDetails: () => _tabController.animateTo(2),
                         ),
                       ),
@@ -244,10 +242,10 @@ class _DataDashboardPageState extends State<DataDashboardPage>
                   const SizedBox(height: 16),
                   
                   DataExportCard(
-                    onExportKnowledge: () => _exportData('knowledge'),
+                    onExportAll: () => _exportData('all'),
+                    onExportKnowledgeBases: () => _exportData('knowledge'),
                     onExportConversations: () => _exportData('conversations'),
-                    onExportFiles: () => _exportData('files'),
-                    onExportAnalytics: () => _exportData('analytics'),
+                    onExportDocuments: () => _exportData('documents'),
                   ),
                   
                   const SizedBox(height: 24),
@@ -262,7 +260,7 @@ class _DataDashboardPageState extends State<DataDashboardPage>
                   const SizedBox(height: 16),
                   
                   AuditLogCard(
-                    logs: state.recentLogs ?? [],
+                    logs: state.auditLogs,
                     onViewAll: () => _tabController.animateTo(3),
                   ),
                 ],
@@ -284,7 +282,7 @@ class _DataDashboardPageState extends State<DataDashboardPage>
         }
 
         if (state is DataManagementError) {
-          return core.ErrorWidget(
+          return AppErrorWidget(
             message: state.message,
             onRetry: _refreshData,
           );
@@ -362,7 +360,7 @@ class _DataDashboardPageState extends State<DataDashboardPage>
         }
 
         if (state is DataManagementError) {
-          return core.ErrorWidget(
+          return AppErrorWidget(
             message: state.message,
             onRetry: _refreshData,
           );
@@ -378,9 +376,8 @@ class _DataDashboardPageState extends State<DataDashboardPage>
                 children: [
                   // 同步状态概览
                   SyncStatusCard(
-                    sync: state.syncStatus,
-                    onForceSync: _forceSync,
-                    showDetails: true,
+                    status: state.syncStatus,
+                    onViewDetails: () {},
                   ),
                   
                   const SizedBox(height: 24),
@@ -418,7 +415,7 @@ class _DataDashboardPageState extends State<DataDashboardPage>
         }
 
         if (state is DataManagementError) {
-          return core.ErrorWidget(
+          return AppErrorWidget(
             message: state.message,
             onRetry: _refreshData,
           );
@@ -785,7 +782,7 @@ class _DataDashboardPageState extends State<DataDashboardPage>
             onPressed: () {
               Navigator.of(context).pop();
               context.read<DataManagementBloc>().add(
-                RestoreBackupEvent(backupId: backupId),
+                RestoreBackupEvent(backupId),
               );
             },
             style: TextButton.styleFrom(foregroundColor: AppColors.error),
@@ -798,7 +795,7 @@ class _DataDashboardPageState extends State<DataDashboardPage>
 
   void _downloadBackup(String backupId) {
     context.read<DataManagementBloc>().add(
-      DownloadBackupEvent(backupId: backupId),
+      DownloadBackupEvent(backupId),
     );
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('开始下载备份...')),
@@ -820,7 +817,7 @@ class _DataDashboardPageState extends State<DataDashboardPage>
             onPressed: () {
               Navigator.of(context).pop();
               context.read<DataManagementBloc>().add(
-                DeleteBackupEvent(backupId: backupId),
+                DeleteBackupEvent(backupId),
               );
             },
             style: TextButton.styleFrom(foregroundColor: AppColors.error),

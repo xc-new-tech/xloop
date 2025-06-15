@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+
+import '../../domain/entities/search_result.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_text_styles.dart';
 import '../bloc/search_state.dart';
 
 /// 搜索结果卡片组件
@@ -52,7 +55,7 @@ class SearchResultCard extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
-                      color: _getScoreColor().withOpacity(0.1),
+                      color: _getScoreColor().withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(
@@ -71,7 +74,9 @@ class SearchResultCard extends StatelessWidget {
               
               // 内容摘要
               Text(
-                result.summary ?? result.content,
+                result.content.length > 200 
+                    ? '${result.content.substring(0, 200)}...'
+                    : result.content,
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                   color: AppColors.textSecondary,
                 ),
@@ -142,26 +147,19 @@ class SearchResultCard extends StatelessWidget {
     IconData iconData;
     Color iconColor;
     
-    switch (result.type.toLowerCase()) {
-      case 'document':
+    switch (result.type) {
+      case SearchResultType.document:
         iconData = Icons.description;
         iconColor = Colors.blue;
         break;
-      case 'faq':
+      case SearchResultType.faq:
         iconData = Icons.quiz;
         iconColor = Colors.green;
         break;
-      case 'knowledge_base':
-        iconData = Icons.library_books;
+      case SearchResultType.mixed:
+        iconData = Icons.auto_awesome;
         iconColor = Colors.orange;
         break;
-      case 'conversation':
-        iconData = Icons.chat;
-        iconColor = Colors.purple;
-        break;
-      default:
-        iconData = Icons.article;
-        iconColor = AppColors.textSecondary;
     }
     
     return Icon(

@@ -47,11 +47,11 @@ class _KnowledgeBaseFormPageState extends State<KnowledgeBaseFormPage> {
       ),
       body: BlocListener<KnowledgeBaseBloc, KnowledgeBaseState>(
         listener: (context, state) {
-          if (state is KnowledgeBaseCreated || state is KnowledgeBaseUpdated) {
+          if (state is KnowledgeBaseOperationSuccess) {
             Navigator.of(context).pop(true);
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text(widget.isEditing ? '知识库更新成功' : '知识库创建成功'),
+                content: Text(state.message ?? (widget.isEditing ? '知识库更新成功' : '知识库创建成功')),
                 backgroundColor: AppColors.success,
               ),
             );

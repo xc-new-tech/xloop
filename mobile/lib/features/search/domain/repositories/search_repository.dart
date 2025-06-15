@@ -1,6 +1,6 @@
 import 'package:dartz/dartz.dart';
 
-import '../../../../core/errors/failures.dart';
+import '../../../../core/error/failures.dart';
 import '../entities/search_result.dart';
 
 /// 搜索存储库接口
@@ -103,36 +103,4 @@ abstract class SearchRepository {
   /// 
   /// 返回健康状态信息或失败信息
   Future<Either<Failure, Map<String, dynamic>>> checkHealth();
-}
-
-/// 批量向量化结果
-class BatchVectorizeResult {
-  final int successful;
-  final int failed;
-  final List<Map<String, dynamic>> results;
-  final List<Map<String, dynamic>> errors;
-  final DateTime timestamp;
-
-  const BatchVectorizeResult({
-    required this.successful,
-    required this.failed,
-    required this.results,
-    required this.errors,
-    required this.timestamp,
-  });
-
-  /// 是否完全成功
-  bool get isFullySuccessful => failed == 0;
-
-  /// 是否部分成功
-  bool get isPartiallySuccessful => successful > 0 && failed > 0;
-
-  /// 是否完全失败
-  bool get isFullyFailed => successful == 0 && failed > 0;
-
-  /// 总处理数量
-  int get total => successful + failed;
-
-  /// 成功率
-  double get successRate => total > 0 ? successful / total : 0.0;
 } 

@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import '../../../../core/constants/api_constants.dart';
 import '../../../../core/error/exceptions.dart';
 import '../../../../core/network/api_client.dart';
+import '../../../../core/network/api_endpoints.dart';
 import '../../domain/entities/conversation.dart';
 import '../models/conversation_model.dart';
 
@@ -81,7 +82,7 @@ class ConversationRemoteDataSourceImpl implements ConversationRemoteDataSource {
     List<String> tags = const [],
   }) async {
     try {
-      final data = {
+      final body = {
         if (knowledgeBaseId != null) 'knowledgeBaseId': knowledgeBaseId,
         if (title != null) 'title': title,
         'type': type.value,
@@ -91,7 +92,7 @@ class ConversationRemoteDataSourceImpl implements ConversationRemoteDataSource {
 
       final response = await _apiClient.post(
         ApiEndpoints.conversations,
-        data: data,
+        body: body,
       );
 
       final apiResponse = ApiResponseModel<Map<String, dynamic>>.fromJson(
@@ -100,14 +101,14 @@ class ConversationRemoteDataSourceImpl implements ConversationRemoteDataSource {
       );
 
       if (!apiResponse.success || apiResponse.data == null) {
-        throw ServerException(message: apiResponse.error ?? '创建对话失败');
+        throw ServerException(apiResponse.error ?? '创建对话失败');
       }
 
       return ConversationModel.fromJson(apiResponse.data!);
     } on DioException catch (e) {
       throw _handleDioException(e);
     } catch (e) {
-      throw ServerException(message: '创建对话时发生未知错误: $e');
+      throw ServerException('创建对话时发生未知错误: $e');
     }
   }
 
@@ -123,9 +124,9 @@ class ConversationRemoteDataSourceImpl implements ConversationRemoteDataSource {
     String sortOrder = 'DESC',
   }) async {
     try {
-      final queryParameters = <String, dynamic>{
-        'page': page,
-        'limit': limit,
+      final queryParameters = <String, String>{
+        'page': page.toString(),
+        'limit': limit.toString(),
         'sortBy': sortBy,
         'sortOrder': sortOrder,
         if (type != null) 'type': type.value,
@@ -145,7 +146,7 @@ class ConversationRemoteDataSourceImpl implements ConversationRemoteDataSource {
       );
 
       if (!apiResponse.success || apiResponse.data == null) {
-        throw ServerException(message: apiResponse.error ?? '获取对话列表失败');
+        throw ServerException(apiResponse.error ?? '获取对话列表失败');
       }
 
       return PaginatedResponseModel<ConversationModel>.fromJson(
@@ -155,7 +156,7 @@ class ConversationRemoteDataSourceImpl implements ConversationRemoteDataSource {
     } on DioException catch (e) {
       throw _handleDioException(e);
     } catch (e) {
-      throw ServerException(message: '获取对话列表时发生未知错误: $e');
+      throw ServerException('获取对话列表时发生未知错误: $e');
     }
   }
 
@@ -170,14 +171,14 @@ class ConversationRemoteDataSourceImpl implements ConversationRemoteDataSource {
       );
 
       if (!apiResponse.success || apiResponse.data == null) {
-        throw ServerException(message: apiResponse.error ?? '获取对话详情失败');
+        throw ServerException(apiResponse.error ?? '获取对话详情失败');
       }
 
       return ConversationModel.fromJson(apiResponse.data!);
     } on DioException catch (e) {
       throw _handleDioException(e);
     } catch (e) {
-      throw ServerException(message: '获取对话详情时发生未知错误: $e');
+      throw ServerException('获取对话详情时发生未知错误: $e');
     }
   }
 
@@ -189,7 +190,7 @@ class ConversationRemoteDataSourceImpl implements ConversationRemoteDataSource {
     try {
       final response = await _apiClient.post(
         '${ApiEndpoints.conversations}/$conversationId/messages',
-        data: request.toJson(),
+        body: request.toJson(),
       );
 
       final apiResponse = ApiResponseModel<Map<String, dynamic>>.fromJson(
@@ -198,14 +199,14 @@ class ConversationRemoteDataSourceImpl implements ConversationRemoteDataSource {
       );
 
       if (!apiResponse.success || apiResponse.data == null) {
-        throw ServerException(message: apiResponse.error ?? '发送消息失败');
+        throw ServerException(apiResponse.error ?? '发送消息失败');
       }
 
       return SendMessageResponseModel.fromJson(apiResponse.data!);
     } on DioException catch (e) {
       throw _handleDioException(e);
     } catch (e) {
-      throw ServerException(message: '发送消息时发生未知错误: $e');
+      throw ServerException('发送消息时发生未知错误: $e');
     }
   }
 
@@ -218,15 +219,15 @@ class ConversationRemoteDataSourceImpl implements ConversationRemoteDataSource {
     ConversationStatus? status,
   }) async {
     try {
-      final data = <String, dynamic>{};
-      if (title != null) data['title'] = title;
-      if (tags != null) data['tags'] = tags;
-      if (settings != null) data['settings'] = settings;
-      if (status != null) data['status'] = status.value;
+      final body = <String, dynamic>{};
+      if (title != null) body['title'] = title;
+      if (tags != null) body['tags'] = tags;
+      if (settings != null) body['settings'] = settings;
+      if (status != null) body['status'] = status.value;
 
       final response = await _apiClient.put(
         '${ApiEndpoints.conversations}/$id',
-        data: data,
+        body: body,
       );
 
       final apiResponse = ApiResponseModel<Map<String, dynamic>>.fromJson(
@@ -235,14 +236,14 @@ class ConversationRemoteDataSourceImpl implements ConversationRemoteDataSource {
       );
 
       if (!apiResponse.success || apiResponse.data == null) {
-        throw ServerException(message: apiResponse.error ?? '更新对话失败');
+        throw ServerException(apiResponse.error ?? '更新对话失败');
       }
 
       return ConversationModel.fromJson(apiResponse.data!);
     } on DioException catch (e) {
       throw _handleDioException(e);
     } catch (e) {
-      throw ServerException(message: '更新对话时发生未知错误: $e');
+      throw ServerException('更新对话时发生未知错误: $e');
     }
   }
 
@@ -257,21 +258,21 @@ class ConversationRemoteDataSourceImpl implements ConversationRemoteDataSource {
       );
 
       if (!apiResponse.success) {
-        throw ServerException(message: apiResponse.error ?? '删除对话失败');
+        throw ServerException(apiResponse.error ?? '删除对话失败');
       }
     } on DioException catch (e) {
       throw _handleDioException(e);
     } catch (e) {
-      throw ServerException(message: '删除对话时发生未知错误: $e');
+      throw ServerException('删除对话时发生未知错误: $e');
     }
   }
 
   @override
   Future<int> bulkDeleteConversations(List<String> ids) async {
     try {
-      final response = await _apiClient.delete(
-        '${ApiEndpoints.conversations}/bulk',
-        data: {'ids': ids},
+      final response = await _apiClient.post(
+        '${ApiEndpoints.conversations}/bulk-delete',
+        body: {'ids': ids},
       );
 
       final apiResponse = ApiResponseModel<Map<String, dynamic>>.fromJson(
@@ -280,14 +281,14 @@ class ConversationRemoteDataSourceImpl implements ConversationRemoteDataSource {
       );
 
       if (!apiResponse.success || apiResponse.data == null) {
-        throw ServerException(message: apiResponse.error ?? '批量删除对话失败');
+        throw ServerException(apiResponse.error ?? '批量删除对话失败');
       }
 
-      return apiResponse.data!['deletedCount'] as int;
+      return apiResponse.data!['deletedCount'] as int? ?? 0;
     } on DioException catch (e) {
       throw _handleDioException(e);
     } catch (e) {
-      throw ServerException(message: '批量删除对话时发生未知错误: $e');
+      throw ServerException('批量删除对话时发生未知错误: $e');
     }
   }
 
@@ -298,14 +299,14 @@ class ConversationRemoteDataSourceImpl implements ConversationRemoteDataSource {
     String? feedback,
   }) async {
     try {
-      final data = {
+      final body = {
         'rating': rating,
         if (feedback != null) 'feedback': feedback,
       };
 
       final response = await _apiClient.post(
-        '${ApiEndpoints.conversations}/$id/rating',
-        data: data,
+        '${ApiEndpoints.conversations}/$id/rate',
+        body: body,
       );
 
       final apiResponse = ApiResponseModel<Map<String, dynamic>?>.fromJson(
@@ -314,12 +315,12 @@ class ConversationRemoteDataSourceImpl implements ConversationRemoteDataSource {
       );
 
       if (!apiResponse.success) {
-        throw ServerException(message: apiResponse.error ?? '对话评分失败');
+        throw ServerException(apiResponse.error ?? '对话评分失败');
       }
     } on DioException catch (e) {
       throw _handleDioException(e);
     } catch (e) {
-      throw ServerException(message: '对话评分时发生未知错误: $e');
+      throw ServerException('对话评分时发生未知错误: $e');
     }
   }
 
@@ -330,16 +331,11 @@ class ConversationRemoteDataSourceImpl implements ConversationRemoteDataSource {
     String? knowledgeBaseId,
   }) async {
     try {
-      final queryParameters = <String, dynamic>{};
-      if (startDate != null) {
-        queryParameters['startDate'] = startDate.toIso8601String();
-      }
-      if (endDate != null) {
-        queryParameters['endDate'] = endDate.toIso8601String();
-      }
-      if (knowledgeBaseId != null) {
-        queryParameters['knowledgeBaseId'] = knowledgeBaseId;
-      }
+      final queryParameters = <String, String>{
+        if (startDate != null) 'startDate': startDate.toIso8601String(),
+        if (endDate != null) 'endDate': endDate.toIso8601String(),
+        if (knowledgeBaseId != null) 'knowledgeBaseId': knowledgeBaseId,
+      };
 
       final response = await _apiClient.get(
         '${ApiEndpoints.conversations}/stats',
@@ -352,74 +348,69 @@ class ConversationRemoteDataSourceImpl implements ConversationRemoteDataSource {
       );
 
       if (!apiResponse.success || apiResponse.data == null) {
-        throw ServerException(message: apiResponse.error ?? '获取对话统计失败');
+        throw ServerException(apiResponse.error ?? '获取对话统计失败');
       }
 
       return ConversationStatsModel.fromJson(apiResponse.data!);
     } on DioException catch (e) {
       throw _handleDioException(e);
     } catch (e) {
-      throw ServerException(message: '获取对话统计时发生未知错误: $e');
+      throw ServerException('获取对话统计时发生未知错误: $e');
     }
   }
 
   /// 处理Dio异常
-  AppException _handleDioException(DioException e) {
+  Exception _handleDioException(DioException e) {
     switch (e.type) {
       case DioExceptionType.connectionTimeout:
       case DioExceptionType.sendTimeout:
       case DioExceptionType.receiveTimeout:
-        return NetworkException(message: '网络连接超时，请检查网络设置');
+        return NetworkException('请求超时，请检查网络连接');
       case DioExceptionType.badResponse:
-        final statusCode = e.response?.statusCode;
-        final message = _extractErrorMessage(e.response?.data);
-        
-        switch (statusCode) {
-          case 400:
-            return ValidationException(message: message ?? '请求参数无效');
-          case 401:
-            return AuthenticationException(message: message ?? '身份验证失败');
-          case 403:
-            return AuthorizationException(message: message ?? '权限不足');
-          case 404:
-            return NotFoundException(message: message ?? '对话不存在');
-          case 429:
-            return RateLimitException(message: message ?? '请求过于频繁');
-          case 500:
-          case 502:
-          case 503:
-          case 504:
-            return ServerException(message: message ?? '服务器内部错误');
-          default:
-            return ServerException(message: message ?? '服务器响应异常');
-        }
+        return _handleStatusCode(e.response?.statusCode ?? 0, e.response?.data);
       case DioExceptionType.cancel:
-        return NetworkException(message: '请求已取消');
-      case DioExceptionType.badCertificate:
-        return NetworkException(message: 'SSL证书验证失败');
-      case DioExceptionType.connectionError:
-        return NetworkException(message: '网络连接失败，请检查网络设置');
+        return NetworkException('请求已取消');
       case DioExceptionType.unknown:
+        if (e.error.toString().contains('SocketException')) {
+          return NetworkException('网络连接失败，请检查网络设置');
+        }
+        return NetworkException('网络请求失败: ${e.message}');
       default:
-        return NetworkException(message: '网络请求失败: ${e.message}');
+        return NetworkException('未知网络错误');
     }
   }
 
-  /// 从响应中提取错误消息
-  String? _extractErrorMessage(dynamic responseData) {
-    if (responseData == null) return null;
+  /// 处理HTTP状态码
+  Exception _handleStatusCode(int statusCode, dynamic responseData) {
+    final message = _extractErrorMessage(responseData);
     
-    try {
-      if (responseData is Map<String, dynamic>) {
-        return responseData['message'] as String? ?? 
-               responseData['error'] as String?;
-      } else if (responseData is String) {
-        return responseData;
-      }
-    } catch (e) {
-      // 忽略解析错误
+    switch (statusCode) {
+      case 400:
+        return ValidationException(message ?? '请求参数错误');
+      case 401:
+        return AuthException(message ?? '身份验证失败');
+      case 403:
+        return AuthException(message ?? '访问被拒绝');
+      case 404:
+        return NotFoundException(message ?? '请求的资源不存在');
+      case 429:
+        return RateLimitException(message ?? '请求过于频繁，请稍后再试');
+      case 500:
+      case 502:
+      case 503:
+      case 504:
+        return ServerException(message ?? '服务器内部错误');
+      default:
+        return ServerException(message ?? '未知服务器错误');
     }
-    
-    return null;
+  }
+
+  /// 提取错误消息
+  String? _extractErrorMessage(dynamic responseData) {
+    if (responseData is Map<String, dynamic>) {
+      return responseData['error']?.toString() ?? 
+             responseData['message']?.toString();
+    }
+    return responseData?.toString();
   }
 } 

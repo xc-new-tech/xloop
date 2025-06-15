@@ -1,17 +1,17 @@
 import 'package:dartz/dartz.dart';
-import '../../../../core/errors/failures.dart';
+import '../../../../core/error/failures.dart';
 import '../../../../core/usecases/usecase.dart';
 import '../entities/file_entity.dart';
 import '../repositories/file_repository.dart';
 
 /// 获取文件列表用例
-class GetFilesUseCase implements UseCase<Map<String, dynamic>, GetFilesParams> {
+class GetFilesUseCase implements UseCase<List<FileEntity>, GetFilesParams> {
   final FileRepository repository;
 
   GetFilesUseCase(this.repository);
 
   @override
-  Future<Either<Failure, Map<String, dynamic>>> call(GetFilesParams params) async {
+  Future<Either<Failure, List<FileEntity>>> call(GetFilesParams params) async {
     return await repository.getFiles(
       knowledgeBaseId: params.knowledgeBaseId,
       category: params.category,
@@ -19,8 +19,6 @@ class GetFilesUseCase implements UseCase<Map<String, dynamic>, GetFilesParams> {
       page: params.page,
       limit: params.limit,
       search: params.search,
-      sortBy: params.sortBy,
-      sortOrder: params.sortOrder,
     );
   }
 }
@@ -33,8 +31,6 @@ class GetFilesParams {
   final int page;
   final int limit;
   final String? search;
-  final String? sortBy;
-  final String? sortOrder;
 
   const GetFilesParams({
     this.knowledgeBaseId,
@@ -43,8 +39,6 @@ class GetFilesParams {
     this.page = 1,
     this.limit = 20,
     this.search,
-    this.sortBy,
-    this.sortOrder,
   });
 
   GetFilesParams copyWith({
@@ -54,8 +48,6 @@ class GetFilesParams {
     int? page,
     int? limit,
     String? search,
-    String? sortBy,
-    String? sortOrder,
   }) {
     return GetFilesParams(
       knowledgeBaseId: knowledgeBaseId ?? this.knowledgeBaseId,
@@ -64,8 +56,6 @@ class GetFilesParams {
       page: page ?? this.page,
       limit: limit ?? this.limit,
       search: search ?? this.search,
-      sortBy: sortBy ?? this.sortBy,
-      sortOrder: sortOrder ?? this.sortOrder,
     );
   }
 
@@ -77,8 +67,6 @@ class GetFilesParams {
       'page': page,
       'limit': limit,
       if (search != null) 'search': search,
-      if (sortBy != null) 'sortBy': sortBy,
-      if (sortOrder != null) 'sortOrder': sortOrder,
     };
   }
 
@@ -91,9 +79,7 @@ class GetFilesParams {
         other.status == status &&
         other.page == page &&
         other.limit == limit &&
-        other.search == search &&
-        other.sortBy == sortBy &&
-        other.sortOrder == sortOrder;
+        other.search == search;
   }
 
   @override
@@ -103,9 +89,7 @@ class GetFilesParams {
         status.hashCode ^
         page.hashCode ^
         limit.hashCode ^
-        search.hashCode ^
-        sortBy.hashCode ^
-        sortOrder.hashCode;
+        search.hashCode;
   }
 
   @override
@@ -116,9 +100,7 @@ class GetFilesParams {
         'status: $status, '
         'page: $page, '
         'limit: $limit, '
-        'search: $search, '
-        'sortBy: $sortBy, '
-        'sortOrder: $sortOrder'
+        'search: $search'
         ')';
   }
 } 

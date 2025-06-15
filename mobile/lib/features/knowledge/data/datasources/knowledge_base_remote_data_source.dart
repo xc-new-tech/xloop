@@ -85,7 +85,8 @@ class KnowledgeBaseRemoteDataSourceImpl implements KnowledgeBaseRemoteDataSource
 
       if (response.statusCode == 200) {
         final data = response.data as Map<String, dynamic>;
-        final knowledgeBasesData = data['data'] as List<dynamic>;
+        final responseData = data['data'] as Map<String, dynamic>;
+        final knowledgeBasesData = responseData['knowledgeBases'] as List<dynamic>;
         
         return knowledgeBasesData
             .map((json) => KnowledgeBaseModel.fromJson(json as Map<String, dynamic>))
@@ -133,7 +134,8 @@ class KnowledgeBaseRemoteDataSourceImpl implements KnowledgeBaseRemoteDataSource
 
       if (response.statusCode == 200) {
         final data = response.data as Map<String, dynamic>;
-        final knowledgeBasesData = data['data'] as List<dynamic>;
+        final responseData = data['data'] as Map<String, dynamic>;
+        final knowledgeBasesData = responseData['knowledgeBases'] as List<dynamic>;
         
         return knowledgeBasesData
             .map((json) => KnowledgeBaseModel.fromJson(json as Map<String, dynamic>))
@@ -181,7 +183,8 @@ class KnowledgeBaseRemoteDataSourceImpl implements KnowledgeBaseRemoteDataSource
 
       if (response.statusCode == 200) {
         final data = response.data as Map<String, dynamic>;
-        final knowledgeBasesData = data['data'] as List<dynamic>;
+        final responseData = data['data'] as Map<String, dynamic>;
+        final knowledgeBasesData = responseData['knowledgeBases'] as List<dynamic>;
         
         return knowledgeBasesData
             .map((json) => KnowledgeBaseModel.fromJson(json as Map<String, dynamic>))

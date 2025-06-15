@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_html/flutter_html.dart';
 
 import '../../domain/entities/search_result.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -41,7 +40,7 @@ class SearchResultItem extends StatelessWidget {
               _buildHeader(),
               const SizedBox(height: 8),
               _buildContent(),
-              if (result.metadata.isNotEmpty) ...[
+              if (result.metadata?.isNotEmpty == true) ...[
                 const SizedBox(height: 12),
                 _buildMetadata(),
               ],
@@ -75,7 +74,7 @@ class SearchResultItem extends StatelessWidget {
                   _buildScoreChip(),
                   const SizedBox(width: 8),
                   Text(
-                    result.source,
+                    _getResultSource(),
                     style: AppTextStyles.bodySmall.copyWith(
                       color: AppColors.textSecondary,
                     ),
@@ -103,12 +102,8 @@ class SearchResultItem extends StatelessWidget {
         iconData = Icons.help;
         color = Colors.green;
         break;
-      case SearchResultType.conversation:
-        iconData = Icons.chat;
-        color = Colors.orange;
-        break;
-      case SearchResultType.knowledgeBase:
-        iconData = Icons.library_books;
+      case SearchResultType.mixed:
+        iconData = Icons.auto_awesome;
         color = Colors.purple;
         break;
     }
@@ -117,7 +112,7 @@ class SearchResultItem extends StatelessWidget {
       width: 40,
       height: 40,
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Icon(
@@ -138,7 +133,7 @@ class SearchResultItem extends StatelessWidget {
         vertical: 2,
       ),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
@@ -274,7 +269,7 @@ class SearchResultItem extends StatelessWidget {
     return Wrap(
       spacing: 8,
       runSpacing: 4,
-      children: result.metadata.entries.take(3).map((entry) {
+              children: (result.metadata?.entries ?? <MapEntry<String, dynamic>>[]).take(3).map((entry) {
         return Container(
           padding: const EdgeInsets.symmetric(
             horizontal: 8,
@@ -323,7 +318,7 @@ class SearchResultItem extends StatelessWidget {
               vertical: 2,
             ),
             decoration: BoxDecoration(
-              color: AppColors.primary.withOpacity(0.1),
+              color: AppColors.primary.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Text(
@@ -342,7 +337,7 @@ class SearchResultItem extends StatelessWidget {
                 vertical: 2,
               ),
               decoration: BoxDecoration(
-                color: AppColors.textSecondary.withOpacity(0.1),
+                color: AppColors.textSecondary.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Text(
@@ -369,7 +364,7 @@ class SearchResultItem extends StatelessWidget {
         text,
         style: style,
         maxLines: maxLines,
-        overflow: maxLines != null ? TextOverflow.ellipsis : null,
+        overflow: maxLines != null ? TextOverflow.ellipsis : TextOverflow.visible,
       );
     }
 
@@ -403,7 +398,7 @@ class SearchResultItem extends StatelessWidget {
       spans.add(TextSpan(
         text: text.substring(index, index + query.length),
         style: style.copyWith(
-          backgroundColor: AppColors.primary.withOpacity(0.2),
+          backgroundColor: AppColors.primary.withValues(alpha: 0.2),
           fontWeight: FontWeight.w600,
         ),
       ));
@@ -414,7 +409,7 @@ class SearchResultItem extends StatelessWidget {
     return RichText(
       text: TextSpan(children: spans),
       maxLines: maxLines,
-      overflow: maxLines != null ? TextOverflow.ellipsis : null,
+      overflow: maxLines != null ? TextOverflow.ellipsis : TextOverflow.visible,
     );
   }
 
@@ -439,6 +434,17 @@ class SearchResultItem extends StatelessWidget {
     } else {
       return '刚刚';
     }
+  }
+
+  String _getResultSource() {
+    if (result is DocumentSearchResult) {
+      final docResult = result as DocumentSearchResult;
+      return docResult.knowledgeBaseName ?? '知识库';
+    } else if (result is FaqSearchResult) {
+      final faqResult = result as FaqSearchResult;
+      return faqResult.knowledgeBaseName ?? 'FAQ';
+    }
+    return '搜索结果';
   }
 
   void _handleAction(String action) {
@@ -488,7 +494,7 @@ class SearchResultGridItem extends StatelessWidget {
                 children: [
                   _buildTypeIcon(),
                   const Spacer(),
-                  if (result.score != null) _buildScoreChip(),
+                  _buildScoreChip(),
                 ],
               ),
               const SizedBox(height: 8),
@@ -514,7 +520,7 @@ class SearchResultGridItem extends StatelessWidget {
               if (result.lastModified != null) ...[
                 const SizedBox(height: 8),
                 Text(
-                  _formatDate(result.lastModified!),
+                  _formatDate(result.lastModified ?? DateTime.now()),
                   style: AppTextStyles.bodySmall.copyWith(
                     color: AppColors.textSecondary,
                   ),
@@ -540,8 +546,8 @@ class SearchResultGridItem extends StatelessWidget {
         iconData = Icons.quiz;
         iconColor = AppColors.success;
         break;
-      case SearchResultType.conversation:
-        iconData = Icons.chat;
+      case SearchResultType.mixed:
+        iconData = Icons.auto_awesome;
         iconColor = AppColors.warning;
         break;
     }
@@ -549,7 +555,7 @@ class SearchResultGridItem extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: iconColor.withOpacity(0.1),
+        color: iconColor.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(6),
       ),
       child: Icon(
@@ -561,8 +567,8 @@ class SearchResultGridItem extends StatelessWidget {
   }
 
   Widget _buildScoreChip() {
-    final scoreText = '${(result.score! * 100).toInt()}%';
-    final scoreColor = _getScoreColor(result.score!);
+    final scoreText = '${(result.score * 100).toInt()}%';
+    final scoreColor = _getScoreColor(result.score);
 
     return Container(
       padding: const EdgeInsets.symmetric(
@@ -570,7 +576,7 @@ class SearchResultGridItem extends StatelessWidget {
         vertical: 2,
       ),
       decoration: BoxDecoration(
-        color: scoreColor.withOpacity(0.1),
+        color: scoreColor.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Text(
@@ -603,5 +609,45 @@ class SearchResultGridItem extends StatelessWidget {
     } else {
       return '刚刚';
     }
+  }
+}
+
+// 在import语句后添加扩展方法
+extension SearchResultExtensions on SearchResult {
+  /// 获取摘要片段
+  String get snippet {
+    if (content.length <= 200) return content;
+    return '${content.substring(0, 200)}...';
+  }
+
+  /// 获取高亮片段列表
+  List<String> get highlights {
+    // 将content分割成句子作为高亮片段
+    final sentences = content.split(RegExp(r'[.。！？!?]'));
+    return sentences
+        .where((s) => s.trim().isNotEmpty)
+        .take(3)
+        .map((s) => s.trim())
+        .toList();
+  }
+
+  /// 获取最后更新时间
+  DateTime get lastUpdated {
+    return updatedAt ?? createdAt ?? DateTime.now();
+  }
+
+  /// 获取最后修改时间
+  DateTime? get lastModified {
+    return updatedAt ?? createdAt;
+  }
+
+  /// 获取标签列表
+  List<String> get tags {
+    if (this is DocumentSearchResult) {
+      return (this as DocumentSearchResult).tags;
+    } else if (this is FaqSearchResult) {
+      return (this as FaqSearchResult).tags;
+    }
+    return [];
   }
 } 

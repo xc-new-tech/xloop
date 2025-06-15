@@ -4,6 +4,7 @@ import 'package:dio/dio.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 
 import '../../core/network/network_info.dart';
+import '../../core/network/api_client.dart';
 import 'data/datasources/conversation_local_data_source.dart';
 import 'data/datasources/conversation_remote_data_source.dart';
 import 'data/repositories/conversation_repository_impl.dart';
@@ -37,17 +38,21 @@ Future<void> initConversationInjection() async {
 
   if (!sl.isRegistered<NetworkInfo>()) {
     sl.registerLazySingleton<NetworkInfo>(
-      () => NetworkInfoImpl(sl<Connectivity>()),
+      () => NetworkInfoImpl(connectivity: sl<Connectivity>()),
     );
+  }
+
+  if (!sl.isRegistered<ApiClient>()) {
+    sl.registerLazySingleton<ApiClient>(() => ApiClient());
   }
 
   // Data Sources
   sl.registerLazySingleton<ConversationRemoteDataSource>(
-    () => ConversationRemoteDataSourceImpl(dio: sl<Dio>()),
+    () => ConversationRemoteDataSourceImpl(apiClient: sl<ApiClient>()),
   );
 
   sl.registerLazySingleton<ConversationLocalDataSource>(
-    () => ConversationLocalDataSourceImpl(sharedPreferences: sl<SharedPreferences>()),
+    () => ConversationLocalDataSourceImpl(prefs: sl<SharedPreferences>()),
   );
 
   // Repository

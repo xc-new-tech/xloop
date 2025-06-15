@@ -1,7 +1,8 @@
 import 'dart:io';
 import 'package:dartz/dartz.dart';
-import '../../../../core/errors/exceptions.dart';
-import '../../../../core/errors/failures.dart';
+import 'package:file_picker/file_picker.dart';
+import '../../../../core/error/exceptions.dart';
+import '../../../../core/error/failures.dart';
 import '../../domain/entities/file_entity.dart';
 import '../../domain/repositories/file_repository.dart';
 import '../data_sources/file_remote_data_source.dart';
@@ -32,23 +33,23 @@ class FileRepositoryImpl implements FileRepository {
       final entities = result.map((model) => model.toEntity()).toList();
       return Right(entities);
     } on ServerException catch (e) {
-      return Left(ServerFailure(e.message));
+      return Left(ServerFailure(message: e.message));
     } on NetworkException catch (e) {
-      return Left(NetworkFailure(e.message));
+      return Left(NetworkFailure(message: e.message));
     } on ValidationException catch (e) {
-      return Left(ValidationFailure(e.message));
+      return Left(ValidationFailure(message: e.message));
     } on UnauthorizedException catch (e) {
-      return Left(AuthFailure(e.message));
+      return Left(AuthFailure(message: e.message));
     } on ForbiddenException catch (e) {
-      return Left(AuthFailure(e.message));
+      return Left(AuthFailure(message: e.message));
     } on NotFoundException catch (e) {
-      return Left(NotFoundFailure(e.message));
+      return Left(NotFoundFailure(message: e.message));
     } on BadRequestException catch (e) {
-      return Left(ValidationFailure(e.message));
+      return Left(ValidationFailure(message: e.message));
     } on OperationCancelledException catch (e) {
-      return Left(CancelFailure(e.message));
+      return Left(ServerFailure(message: e.message));
     } catch (e) {
-      return Left(UnknownFailure('批量上传文件失败: ${e.toString()}'));
+      return Left(UnknownFailure(message: '批量上传文件失败: ${e.toString()}'));
     }
   }
 
@@ -71,23 +72,62 @@ class FileRepositoryImpl implements FileRepository {
 
       return Right(result.toEntity());
     } on ServerException catch (e) {
-      return Left(ServerFailure(e.message));
+      return Left(ServerFailure(message: e.message));
     } on NetworkException catch (e) {
-      return Left(NetworkFailure(e.message));
+      return Left(NetworkFailure(message: e.message));
     } on ValidationException catch (e) {
-      return Left(ValidationFailure(e.message));
+      return Left(ValidationFailure(message: e.message));
     } on UnauthorizedException catch (e) {
-      return Left(AuthFailure(e.message));
+      return Left(AuthFailure(message: e.message));
     } on ForbiddenException catch (e) {
-      return Left(AuthFailure(e.message));
+      return Left(AuthFailure(message: e.message));
     } on NotFoundException catch (e) {
-      return Left(NotFoundFailure(e.message));
+      return Left(NotFoundFailure(message: e.message));
     } on BadRequestException catch (e) {
-      return Left(ValidationFailure(e.message));
+      return Left(ValidationFailure(message: e.message));
     } on OperationCancelledException catch (e) {
-      return Left(CancelFailure(e.message));
+      return Left(ServerFailure(message: e.message));
     } catch (e) {
-      return Left(UnknownFailure('上传文件失败: ${e.toString()}'));
+      return Left(UnknownFailure(message: '上传文件失败: ${e.toString()}'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, List<FileEntity>>> uploadPlatformFiles({
+    required List<PlatformFile> platformFiles,
+    required String knowledgeBaseId,
+    required String category,
+    List<String>? tags,
+    void Function(int count, int total)? onProgress,
+  }) async {
+    try {
+      final result = await _remoteDataSource.uploadPlatformFiles(
+        platformFiles: platformFiles,
+        knowledgeBaseId: knowledgeBaseId,
+        category: category,
+        tags: tags,
+        onProgress: onProgress,
+      );
+
+      return Right(result.map((model) => model.toEntity()).toList());
+    } on ServerException catch (e) {
+      return Left(ServerFailure(message: e.message));
+    } on NetworkException catch (e) {
+      return Left(NetworkFailure(message: e.message));
+    } on ValidationException catch (e) {
+      return Left(ValidationFailure(message: e.message));
+    } on UnauthorizedException catch (e) {
+      return Left(AuthFailure(message: e.message));
+    } on ForbiddenException catch (e) {
+      return Left(AuthFailure(message: e.message));
+    } on NotFoundException catch (e) {
+      return Left(NotFoundFailure(message: e.message));
+    } on BadRequestException catch (e) {
+      return Left(ValidationFailure(message: e.message));
+    } on OperationCancelledException catch (e) {
+      return Left(ServerFailure(message: e.message));
+    } catch (e) {
+      return Left(UnknownFailure(message: '上传文件失败: ${e.toString()}'));
     }
   }
 
@@ -113,21 +153,21 @@ class FileRepositoryImpl implements FileRepository {
       final entities = result.map((model) => model.toEntity()).toList();
       return Right(entities);
     } on ServerException catch (e) {
-      return Left(ServerFailure(e.message));
+      return Left(ServerFailure(message: e.message));
     } on NetworkException catch (e) {
-      return Left(NetworkFailure(e.message));
+      return Left(NetworkFailure(message: e.message));
     } on ValidationException catch (e) {
-      return Left(ValidationFailure(e.message));
+      return Left(ValidationFailure(message: e.message));
     } on UnauthorizedException catch (e) {
-      return Left(AuthFailure(e.message));
+      return Left(AuthFailure(message: e.message));
     } on ForbiddenException catch (e) {
-      return Left(AuthFailure(e.message));
+      return Left(AuthFailure(message: e.message));
     } on NotFoundException catch (e) {
-      return Left(NotFoundFailure(e.message));
+      return Left(NotFoundFailure(message: e.message));
     } on BadRequestException catch (e) {
-      return Left(ValidationFailure(e.message));
+      return Left(ValidationFailure(message: e.message));
     } catch (e) {
-      return Left(UnknownFailure('获取文件列表失败: ${e.toString()}'));
+      return Left(UnknownFailure(message: '获取文件列表失败: ${e.toString()}'));
     }
   }
 
@@ -137,17 +177,17 @@ class FileRepositoryImpl implements FileRepository {
       final result = await _remoteDataSource.getFileById(fileId);
       return Right(result.toEntity());
     } on ServerException catch (e) {
-      return Left(ServerFailure(e.message));
+      return Left(ServerFailure(message: e.message));
     } on NetworkException catch (e) {
-      return Left(NetworkFailure(e.message));
+      return Left(NetworkFailure(message: e.message));
     } on UnauthorizedException catch (e) {
-      return Left(AuthFailure(e.message));
+      return Left(AuthFailure(message: e.message));
     } on ForbiddenException catch (e) {
-      return Left(AuthFailure(e.message));
+      return Left(AuthFailure(message: e.message));
     } on NotFoundException catch (e) {
-      return Left(NotFoundFailure(e.message));
+      return Left(NotFoundFailure(message: e.message));
     } catch (e) {
-      return Left(UnknownFailure('获取文件详情失败: ${e.toString()}'));
+      return Left(UnknownFailure(message: '获取文件详情失败: ${e.toString()}'));
     }
   }
 
@@ -165,19 +205,19 @@ class FileRepositoryImpl implements FileRepository {
       );
       return Right(result);
     } on ServerException catch (e) {
-      return Left(ServerFailure(e.message));
+      return Left(ServerFailure(message: e.message));
     } on NetworkException catch (e) {
-      return Left(NetworkFailure(e.message));
+      return Left(NetworkFailure(message: e.message));
     } on UnauthorizedException catch (e) {
-      return Left(AuthFailure(e.message));
+      return Left(AuthFailure(message: e.message));
     } on ForbiddenException catch (e) {
-      return Left(AuthFailure(e.message));
+      return Left(AuthFailure(message: e.message));
     } on NotFoundException catch (e) {
-      return Left(NotFoundFailure(e.message));
+      return Left(NotFoundFailure(message: e.message));
     } on OperationCancelledException catch (e) {
-      return Left(CancelFailure(e.message));
+      return Left(ServerFailure(message: e.message));
     } catch (e) {
-      return Left(UnknownFailure('下载文件失败: ${e.toString()}'));
+      return Left(UnknownFailure(message: '下载文件失败: ${e.toString()}'));
     }
   }
 
@@ -187,17 +227,17 @@ class FileRepositoryImpl implements FileRepository {
       final result = await _remoteDataSource.deleteFile(fileId);
       return Right(result);
     } on ServerException catch (e) {
-      return Left(ServerFailure(e.message));
+      return Left(ServerFailure(message: e.message));
     } on NetworkException catch (e) {
-      return Left(NetworkFailure(e.message));
+      return Left(NetworkFailure(message: e.message));
     } on UnauthorizedException catch (e) {
-      return Left(AuthFailure(e.message));
+      return Left(AuthFailure(message: e.message));
     } on ForbiddenException catch (e) {
-      return Left(AuthFailure(e.message));
+      return Left(AuthFailure(message: e.message));
     } on NotFoundException catch (e) {
-      return Left(NotFoundFailure(e.message));
+      return Left(NotFoundFailure(message: e.message));
     } catch (e) {
-      return Left(UnknownFailure('删除文件失败: ${e.toString()}'));
+      return Left(UnknownFailure(message: '删除文件失败: ${e.toString()}'));
     }
   }
 
@@ -207,19 +247,19 @@ class FileRepositoryImpl implements FileRepository {
       final result = await _remoteDataSource.deleteFiles(fileIds);
       return Right(result);
     } on ServerException catch (e) {
-      return Left(ServerFailure(e.message));
+      return Left(ServerFailure(message: e.message));
     } on NetworkException catch (e) {
-      return Left(NetworkFailure(e.message));
+      return Left(NetworkFailure(message: e.message));
     } on UnauthorizedException catch (e) {
-      return Left(AuthFailure(e.message));
+      return Left(AuthFailure(message: e.message));
     } on ForbiddenException catch (e) {
-      return Left(AuthFailure(e.message));
+      return Left(AuthFailure(message: e.message));
     } on NotFoundException catch (e) {
-      return Left(NotFoundFailure(e.message));
+      return Left(NotFoundFailure(message: e.message));
     } on ValidationException catch (e) {
-      return Left(ValidationFailure(e.message));
+      return Left(ValidationFailure(message: e.message));
     } catch (e) {
-      return Left(UnknownFailure('批量删除文件失败: ${e.toString()}'));
+      return Left(UnknownFailure(message: '批量删除文件失败: ${e.toString()}'));
     }
   }
 
@@ -229,17 +269,19 @@ class FileRepositoryImpl implements FileRepository {
       final result = await _remoteDataSource.reparseFile(fileId);
       return Right(result.toEntity());
     } on ServerException catch (e) {
-      return Left(ServerFailure(e.message));
+      return Left(ServerFailure(message: e.message));
     } on NetworkException catch (e) {
-      return Left(NetworkFailure(e.message));
+      return Left(NetworkFailure(message: e.message));
     } on UnauthorizedException catch (e) {
-      return Left(AuthFailure(e.message));
+      return Left(AuthFailure(message: e.message));
     } on ForbiddenException catch (e) {
-      return Left(AuthFailure(e.message));
+      return Left(AuthFailure(message: e.message));
     } on NotFoundException catch (e) {
-      return Left(NotFoundFailure(e.message));
+      return Left(NotFoundFailure(message: e.message));
+    } on ValidationException catch (e) {
+      return Left(ValidationFailure(message: e.message));
     } catch (e) {
-      return Left(UnknownFailure('重新解析文件失败: ${e.toString()}'));
+      return Left(UnknownFailure(message: '重新解析文件失败: ${e.toString()}'));
     }
   }
 
@@ -259,19 +301,19 @@ class FileRepositoryImpl implements FileRepository {
       );
       return Right(result.toEntity());
     } on ServerException catch (e) {
-      return Left(ServerFailure(e.message));
+      return Left(ServerFailure(message: e.message));
     } on NetworkException catch (e) {
-      return Left(NetworkFailure(e.message));
+      return Left(NetworkFailure(message: e.message));
     } on ValidationException catch (e) {
-      return Left(ValidationFailure(e.message));
+      return Left(ValidationFailure(message: e.message));
     } on UnauthorizedException catch (e) {
-      return Left(AuthFailure(e.message));
+      return Left(AuthFailure(message: e.message));
     } on ForbiddenException catch (e) {
-      return Left(AuthFailure(e.message));
+      return Left(AuthFailure(message: e.message));
     } on NotFoundException catch (e) {
-      return Left(NotFoundFailure(e.message));
+      return Left(NotFoundFailure(message: e.message));
     } catch (e) {
-      return Left(UnknownFailure('更新文件信息失败: ${e.toString()}'));
+      return Left(UnknownFailure(message: '更新文件信息失败: ${e.toString()}'));
     }
   }
 
@@ -285,15 +327,15 @@ class FileRepositoryImpl implements FileRepository {
       );
       return Right(result);
     } on ServerException catch (e) {
-      return Left(ServerFailure(e.message));
+      return Left(ServerFailure(message: e.message));
     } on NetworkException catch (e) {
-      return Left(NetworkFailure(e.message));
+      return Left(NetworkFailure(message: e.message));
     } on UnauthorizedException catch (e) {
-      return Left(AuthFailure(e.message));
+      return Left(AuthFailure(message: e.message));
     } on ForbiddenException catch (e) {
-      return Left(AuthFailure(e.message));
+      return Left(AuthFailure(message: e.message));
     } catch (e) {
-      return Left(UnknownFailure('获取文件统计信息失败: ${e.toString()}'));
+      return Left(UnknownFailure(message: '获取文件统计信息失败: ${e.toString()}'));
     }
   }
 
@@ -319,17 +361,17 @@ class FileRepositoryImpl implements FileRepository {
       final entities = result.map((model) => model.toEntity()).toList();
       return Right(entities);
     } on ServerException catch (e) {
-      return Left(ServerFailure(e.message));
+      return Left(ServerFailure(message: e.message));
     } on NetworkException catch (e) {
-      return Left(NetworkFailure(e.message));
+      return Left(NetworkFailure(message: e.message));
     } on ValidationException catch (e) {
-      return Left(ValidationFailure(e.message));
+      return Left(ValidationFailure(message: e.message));
     } on UnauthorizedException catch (e) {
-      return Left(AuthFailure(e.message));
+      return Left(AuthFailure(message: e.message));
     } on ForbiddenException catch (e) {
-      return Left(AuthFailure(e.message));
+      return Left(AuthFailure(message: e.message));
     } catch (e) {
-      return Left(UnknownFailure('搜索文件失败: ${e.toString()}'));
+      return Left(UnknownFailure(message: '搜索文件失败: ${e.toString()}'));
     }
   }
 
@@ -340,7 +382,7 @@ class FileRepositoryImpl implements FileRepository {
       final previewUrl = '${_remoteDataSource.toString()}/files/$fileId/preview';
       return Right(previewUrl);
     } catch (e) {
-      return Left(UnknownFailure('获取文件预览URL失败: ${e.toString()}'));
+      return Left(UnknownFailure(message: '获取文件预览URL失败: ${e.toString()}'));
     }
   }
 
@@ -352,15 +394,15 @@ class FileRepositoryImpl implements FileRepository {
     } on NotFoundException {
       return const Right(false);
     } on ServerException catch (e) {
-      return Left(ServerFailure(e.message));
+      return Left(ServerFailure(message: e.message));
     } on NetworkException catch (e) {
-      return Left(NetworkFailure(e.message));
+      return Left(NetworkFailure(message: e.message));
     } on UnauthorizedException catch (e) {
-      return Left(AuthFailure(e.message));
+      return Left(AuthFailure(message: e.message));
     } on ForbiddenException catch (e) {
-      return Left(AuthFailure(e.message));
+      return Left(AuthFailure(message: e.message));
     } catch (e) {
-      return Left(UnknownFailure('检查文件是否存在失败: ${e.toString()}'));
+      return Left(UnknownFailure(message: '检查文件是否存在失败: ${e.toString()}'));
     }
   }
 } 

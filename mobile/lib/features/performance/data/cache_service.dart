@@ -64,6 +64,8 @@ class CacheService {
     _memoryCache[key] = CacheEntry(
       value: value,
       expiration: expirationTime,
+      created: DateTime.now(),
+      lastAccessed: DateTime.now(),
     );
 
     try {

@@ -1,6 +1,6 @@
 import 'dart:io';
 import 'package:dartz/dartz.dart';
-import '../../../../core/errors/failures.dart';
+import '../../../../core/error/failures.dart';
 import '../../../../core/usecases/usecase.dart';
 import '../entities/file_entity.dart';
 import '../repositories/file_repository.dart';
@@ -13,7 +13,7 @@ class UploadFilesUseCase implements UseCase<List<FileEntity>, UploadFilesParams>
 
   @override
   Future<Either<Failure, List<FileEntity>>> call(UploadFilesParams params) async {
-    return await repository.uploadFiles(
+    return repository.uploadFiles(
       files: params.files,
       knowledgeBaseId: params.knowledgeBaseId,
       category: params.category,

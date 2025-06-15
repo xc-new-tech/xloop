@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:dartz/dartz.dart';
-import '../../../../core/errors/failures.dart';
+import 'package:file_picker/file_picker.dart';
+import '../../../../core/error/failures.dart';
 import '../entities/file_entity.dart';
 
 /// 文件存储库接口
@@ -33,6 +34,21 @@ abstract class FileRepository {
     required String category,
     List<String>? tags,
     void Function(int sent, int total)? onProgress,
+  });
+
+  /// 上传PlatformFile（支持Web和移动端）
+  /// [platformFiles] 要上传的PlatformFile列表
+  /// [knowledgeBaseId] 知识库ID
+  /// [category] 文件分类
+  /// [tags] 文件标签
+  /// [onProgress] 上传进度回调(当前文件索引, 总文件数)
+  /// 返回上传成功的文件列表
+  Future<Either<Failure, List<FileEntity>>> uploadPlatformFiles({
+    required List<PlatformFile> platformFiles,
+    required String knowledgeBaseId,
+    required String category,
+    List<String>? tags,
+    void Function(int count, int total)? onProgress,
   });
 
   /// 获取文件列表

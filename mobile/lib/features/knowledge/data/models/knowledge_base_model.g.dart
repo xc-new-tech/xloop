@@ -11,7 +11,7 @@ KnowledgeBaseModel _$KnowledgeBaseModelFromJson(Map<String, dynamic> json) =>
       id: json['id'] as String,
       name: json['name'] as String,
       description: json['description'] as String?,
-      ownerId: json['ownerId'] as String,
+      ownerId: json['ownerId'] as String?,
       type: $enumDecode(_$KnowledgeBaseTypeEnumMap, json['type']),
       status: $enumDecode(_$KnowledgeBaseStatusEnumMap, json['status']),
       settings: json['settings'] as Map<String, dynamic>?,
@@ -29,7 +29,7 @@ KnowledgeBaseModel _$KnowledgeBaseModelFromJson(Map<String, dynamic> json) =>
       updatedAt: json['updatedAt'] == null
           ? null
           : DateTime.parse(json['updatedAt'] as String),
-      createdBy: json['createdBy'] as String,
+      createdBy: json['createdBy'] as String?,
       updatedBy: json['updatedBy'] as String?,
     );
 

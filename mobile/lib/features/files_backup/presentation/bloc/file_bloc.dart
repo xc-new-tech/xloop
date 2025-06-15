@@ -24,6 +24,7 @@ class FileBloc extends Bloc<FileEvent, FileState> {
     on<GetFileDetailEvent>(_onGetFileDetail);
     on<UploadFilesEvent>(_onUploadFiles);
     on<UploadFileEvent>(_onUploadFile);
+    on<UploadPlatformFilesEvent>(_onUploadPlatformFiles);
     on<DownloadFileEvent>(_onDownloadFile);
     on<DeleteFileEvent>(_onDeleteFile);
     on<DeleteFilesEvent>(_onDeleteFiles);
@@ -44,9 +45,10 @@ class FileBloc extends Bloc<FileEvent, FileState> {
   /// 获取文件列表
   Future<void> _onGetFiles(GetFilesEvent event, Emitter<FileState> emit) async {
     if (event.refresh) {
-      _currentPage = 1;
       _currentFiles.clear();
+      _currentPage = 1;
       _hasReachedMax = false;
+      _totalCount = 0;
     }
 
     if (_hasReachedMax && !event.refresh) return;
@@ -65,11 +67,8 @@ class FileBloc extends Bloc<FileEvent, FileState> {
 
       result.fold(
         (failure) => emit(FileError(message: failure.message)),
-        (response) {
-          final files = response['files'] as List<FileEntity>;
-          final totalCount = response['totalCount'] as int;
-          final hasMore = response['hasMore'] as bool;
-
+        (files) {
+          // 直接使用返回的文件列表
           if (event.refresh) {
             _currentFiles = files;
           } else {
@@ -77,8 +76,9 @@ class FileBloc extends Bloc<FileEvent, FileState> {
           }
 
           _currentPage = event.page;
-          _hasReachedMax = !hasMore;
-          _totalCount = totalCount;
+          // 如果返回的文件数量少于limit，说明没有更多数据了
+          _hasReachedMax = files.length < event.limit;
+          _totalCount = _currentFiles.length; // 使用当前文件总数
           _currentFilters = {
             'knowledgeBaseId': event.knowledgeBaseId,
             'category': event.category,
@@ -106,7 +106,7 @@ class FileBloc extends Bloc<FileEvent, FileState> {
     emit(const FileLoading());
 
     try {
-      final result = await _fileRepository.getFileDetail(event.fileId);
+      final result = await _fileRepository.getFileById(event.fileId);
 
       result.fold(
         (failure) => emit(FileError(message: failure.message)),
@@ -140,6 +140,95 @@ class FileBloc extends Bloc<FileEvent, FileState> {
     try {
       final result = await _fileRepository.uploadFiles(
         files: event.files,
+        knowledgeBaseId: event.knowledgeBaseId,
+        category: event.category,
+        tags: event.tags,
+        onProgress: (current, total) {
+          // 更新总体进度
+          final updatedUploads = uploads.map((upload) {
+            final index = uploads.indexOf(upload);
+            if (index < current) {
+              return upload.copyWith(
+                progress: 1.0,
+                sent: upload.total,
+                status: 'success',
+              );
+            } else if (index == current) {
+              return upload.copyWith(
+                progress: 0.5, // 当前文件正在上传
+                status: 'uploading',
+              );
+            }
+            return upload;
+          }).toList();
+          
+          emit(FileUploading(updatedUploads));
+        },
+      );
+
+      result.fold(
+        (failure) {
+          // 标记所有上传为失败
+          final failedUploads = uploads.map((upload) => 
+            upload.copyWith(
+              status: 'error',
+              error: failure.message,
+            )
+          ).toList();
+          emit(FileUploading(failedUploads));
+          emit(FileError(message: failure.message, operationType: 'upload'));
+        },
+        (uploadedFiles) {
+          // 标记所有上传为成功
+          final successUploads = uploads.map((upload) => 
+            upload.copyWith(
+              progress: 1.0,
+              sent: upload.total,
+              status: 'success',
+            )
+          ).toList();
+          emit(FileUploading(successUploads));
+          emit(FileUploadSuccess(uploadedFiles: uploadedFiles));
+          
+          // 刷新文件列表
+          add(const RefreshFilesEvent());
+        },
+      );
+    } catch (e) {
+      final errorUploads = uploads.map((upload) => 
+        upload.copyWith(
+          status: 'error',
+          error: e.toString(),
+        )
+      ).toList();
+      emit(FileUploading(errorUploads));
+      emit(FileError(message: '文件上传失败: $e', operationType: 'upload'));
+    }
+  }
+
+  /// 上传PlatformFile（支持Web和移动端）
+  Future<void> _onUploadPlatformFiles(UploadPlatformFilesEvent event, Emitter<FileState> emit) async {
+    final uploads = <FileUploadProgress>[];
+    
+    // 初始化上传进度
+    for (int i = 0; i < event.platformFiles.length; i++) {
+      final file = event.platformFiles[i];
+      uploads.add(FileUploadProgress(
+        fileName: file.name,
+        filePath: file.path ?? '',
+        progress: 0.0,
+        sent: 0,
+        total: file.size,
+        status: 'uploading',
+        uploadId: 'upload_${DateTime.now().millisecondsSinceEpoch}_$i',
+      ));
+    }
+
+    emit(FileUploading(uploads));
+
+    try {
+      final result = await _fileRepository.uploadPlatformFiles(
+        platformFiles: event.platformFiles,
         knowledgeBaseId: event.knowledgeBaseId,
         category: event.category,
         tags: event.tags,
@@ -456,17 +545,13 @@ class FileBloc extends Bloc<FileEvent, FileState> {
 
       result.fold(
         (failure) => emit(FileError(message: failure.message, operationType: 'search')),
-        (response) {
-          final searchResults = response['files'] as List<FileEntity>;
-          final totalCount = response['totalCount'] as int;
-          final hasMore = response['hasMore'] as bool;
-
+        (searchResults) {
           emit(FileSearchLoaded(
             searchResults: searchResults,
             query: event.query,
-            hasReachedMax: !hasMore,
+            hasReachedMax: searchResults.length < event.limit,
             currentPage: event.page,
-            totalCount: totalCount,
+            totalCount: searchResults.length,
           ));
         },
       );

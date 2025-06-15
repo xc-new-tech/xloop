@@ -10,7 +10,7 @@ class KnowledgeBaseModel extends KnowledgeBase {
     required super.id,
     required super.name,
     super.description,
-    required super.ownerId,
+    super.ownerId,
     required super.type,
     required super.status,
     super.settings,
@@ -24,12 +24,68 @@ class KnowledgeBaseModel extends KnowledgeBase {
     required super.lastActivity,
     required super.createdAt,
     super.updatedAt,
-    required super.createdBy,
+    super.createdBy,
     super.updatedBy,
   });
 
-  factory KnowledgeBaseModel.fromJson(Map<String, dynamic> json) =>
-      _$KnowledgeBaseModelFromJson(json);
+  factory KnowledgeBaseModel.fromJson(Map<String, dynamic> json) {
+    return KnowledgeBaseModel(
+      id: json['id'] as String,
+      name: json['name'] as String,
+      description: json['description'] as String?,
+      ownerId: json['owner_id'] as String? ?? json['ownerId'] as String? ?? 'unknown',
+      type: _parseKnowledgeBaseType(json['type'] as String),
+      status: _parseKnowledgeBaseStatus(json['status'] as String),
+      settings: json['settings'] as Map<String, dynamic>?,
+      tags: (json['tags'] as List<dynamic>?)?.map((e) => e as String).toList() ?? [],
+      indexingEnabled: json['indexing_enabled'] as bool? ?? json['indexingEnabled'] as bool? ?? false,
+      searchEnabled: json['search_enabled'] as bool? ?? json['searchEnabled'] as bool? ?? false,
+      aiEnabled: json['ai_enabled'] as bool? ?? json['aiEnabled'] as bool? ?? false,
+      vectorStoreId: json['vector_store_id'] as String? ?? json['vectorStoreId'] as String?,
+      documentCount: _parseIntFromDynamic(json['document_count'] ?? json['documentCount'] ?? 0),
+      totalSize: _parseIntFromDynamic(json['total_size'] ?? json['totalSize'] ?? 0),
+      lastActivity: DateTime.parse(json['last_activity'] as String? ?? json['lastActivity'] as String? ?? DateTime.now().toIso8601String()),
+      createdAt: DateTime.parse(json['created_at'] as String? ?? json['createdAt'] as String? ?? DateTime.now().toIso8601String()),
+      updatedAt: json['updated_at'] != null 
+          ? DateTime.parse(json['updated_at'] as String)
+          : (json['updatedAt'] != null ? DateTime.parse(json['updatedAt'] as String) : null),
+      createdBy: json['created_by'] as String? ?? json['createdBy'] as String? ?? 'system',
+      updatedBy: json['updated_by'] as String? ?? json['updatedBy'] as String?,
+    );
+  }
+
+  static KnowledgeBaseType _parseKnowledgeBaseType(String type) {
+    switch (type.toLowerCase()) {
+      case 'personal':
+        return KnowledgeBaseType.personal;
+      case 'team':
+        return KnowledgeBaseType.team;
+      case 'public':
+        return KnowledgeBaseType.public;
+      default:
+        return KnowledgeBaseType.personal;
+    }
+  }
+
+  static KnowledgeBaseStatus _parseKnowledgeBaseStatus(String status) {
+    switch (status.toLowerCase()) {
+      case 'active':
+        return KnowledgeBaseStatus.active;
+      case 'archived':
+        return KnowledgeBaseStatus.archived;
+      case 'disabled':
+        return KnowledgeBaseStatus.disabled;
+      default:
+        return KnowledgeBaseStatus.active;
+    }
+  }
+
+  static int _parseIntFromDynamic(dynamic value) {
+    if (value is int) return value;
+    if (value is String) return int.tryParse(value) ?? 0;
+    if (value is double) return value.toInt();
+    return 0;
+  }
 
   Map<String, dynamic> toJson() => _$KnowledgeBaseModelToJson(this);
 

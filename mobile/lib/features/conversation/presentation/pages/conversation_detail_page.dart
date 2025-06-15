@@ -3,7 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
 
 import '../../../../core/widgets/loading_widget.dart';
-import '../../../../core/widgets/error_widget.dart';
+import '../../../shared/presentation/widgets/error_widget.dart';
 import '../../domain/entities/conversation.dart';
 import '../bloc/conversation_bloc.dart';
 import '../bloc/conversation_event.dart';
@@ -92,7 +92,7 @@ class _ConversationDetailPageState extends State<ConversationDetailPage> {
           onRate: (rating, feedback) {
             _conversationBloc.add(RateConversationEvent(
               id: widget.conversationId,
-              rating: rating,
+              rating: rating.round(),
               feedback: feedback,
             ));
           },
@@ -223,7 +223,7 @@ class _ConversationDetailPageState extends State<ConversationDetailPage> {
             }
             
             if (state is ConversationError) {
-              return ErrorRetryWidget(
+              return AppErrorWidget(
                 message: state.message,
                 onRetry: _refreshConversation,
               );
@@ -274,7 +274,7 @@ class _ConversationDetailPageState extends State<ConversationDetailPage> {
                               final message = messages[index];
                               return MessageBubble(
                                 message: message,
-                                isUser: message.source.type == MessageSourceType.user,
+                                isUser: message.role == MessageRole.user,
                               );
                             },
                           ),

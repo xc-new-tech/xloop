@@ -347,14 +347,20 @@ class ApiResponse<T> {
 /// 向量化请求模型
 class VectorizeDocumentRequest {
   final String documentId;
+  final String content;
+  final Map<String, dynamic>? metadata;
 
   const VectorizeDocumentRequest({
     required this.documentId,
+    required this.content,
+    this.metadata,
   });
 
   Map<String, dynamic> toJson() {
     return {
       'documentId': documentId,
+      'content': content,
+      if (metadata != null) 'metadata': metadata,
     };
   }
 }
@@ -362,32 +368,41 @@ class VectorizeDocumentRequest {
 /// FAQ向量化请求模型
 class VectorizeFaqRequest {
   final String faqId;
+  final String question;
+  final String answer;
+  final Map<String, dynamic>? metadata;
 
   const VectorizeFaqRequest({
     required this.faqId,
+    required this.question,
+    required this.answer,
+    this.metadata,
   });
 
   Map<String, dynamic> toJson() {
     return {
       'faqId': faqId,
+      'question': question,
+      'answer': answer,
+      if (metadata != null) 'metadata': metadata,
     };
   }
 }
 
 /// 批量向量化请求模型
 class BatchVectorizeRequest {
-  final List<String> documentIds;
-  final List<String> faqIds;
+  final String type;
+  final List<Map<String, dynamic>> items;
 
   const BatchVectorizeRequest({
-    this.documentIds = const [],
-    this.faqIds = const [],
+    required this.type,
+    required this.items,
   });
 
   Map<String, dynamic> toJson() {
     return {
-      'documentIds': documentIds,
-      'faqIds': faqIds,
+      'type': type,
+      'items': items,
     };
   }
 }

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 /// 应用主题配置类
 class AppTheme {
@@ -198,8 +197,8 @@ class AppTheme {
         space: 1,
       ),
       
-      // 字体系列 - 使用Google Fonts的Noto Sans SC（支持中文）
-      textTheme: GoogleFonts.notoSansScTextTheme(),
+      // 字体系列 - 使用系统默认字体（支持中文）
+      fontFamily: 'Roboto',
     );
   }
 
@@ -376,13 +375,8 @@ class AppTheme {
         space: 1,
       ),
       
-      // 字体系列 - 使用Google Fonts的Noto Sans SC（支持中文）
-      textTheme: GoogleFonts.notoSansScTextTheme(
-        ThemeData.dark().textTheme.apply(
-          bodyColor: _darkOnSurfaceColor,
-          displayColor: _darkOnSurfaceColor,
-        ),
-      ),
+      // 字体系列 - 使用系统默认字体（支持中文）
+      fontFamily: 'Roboto',
     );
   }
 } 

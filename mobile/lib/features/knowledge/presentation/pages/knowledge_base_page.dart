@@ -13,13 +13,34 @@ import '../widgets/knowledge_base_card.dart';
 import '../widgets/knowledge_base_search_widget.dart';
 
 /// 知识库管理页面
-class KnowledgeBasePage extends StatelessWidget {
+class KnowledgeBasePage extends StatefulWidget {
   const KnowledgeBasePage({super.key});
 
   @override
+  State<KnowledgeBasePage> createState() => _KnowledgeBasePageState();
+}
+
+class _KnowledgeBasePageState extends State<KnowledgeBasePage> {
+  late KnowledgeBaseBloc _knowledgeBaseBloc;
+
+  @override
+  void initState() {
+    super.initState();
+    _knowledgeBaseBloc = sl<KnowledgeBaseBloc>()..add(const LoadKnowledgeBasesEvent());
+  }
+
+  @override
+  void dispose() {
+    // 清理BLoC状态
+    _knowledgeBaseBloc.add(const ResetKnowledgeBaseStateEvent());
+    _knowledgeBaseBloc.close();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (context) => sl<KnowledgeBaseBloc>()..add(const LoadKnowledgeBasesEvent()),
+    return BlocProvider.value(
+      value: _knowledgeBaseBloc,
       child: const _KnowledgeBasePageContent(),
     );
   }
@@ -45,7 +66,36 @@ class _KnowledgeBasePageContentState extends State<_KnowledgeBasePageContent> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return BlocListener<KnowledgeBaseBloc, KnowledgeBaseState>(
+      listener: (context, state) {
+        if (state is KnowledgeBaseOperationSuccess) {
+          // 操作成功后刷新列表
+          context.read<KnowledgeBaseBloc>().add(const LoadKnowledgeBasesEvent());
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(state.message),
+              backgroundColor: AppColors.success,
+            ),
+          );
+        } else if (state is KnowledgeBaseDeleteSuccess) {
+          // 删除成功后刷新列表
+          context.read<KnowledgeBaseBloc>().add(const LoadKnowledgeBasesEvent());
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(state.message),
+              backgroundColor: AppColors.success,
+            ),
+          );
+        } else if (state is KnowledgeBaseError) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('操作失败: ${state.message}'),
+              backgroundColor: AppColors.error,
+            ),
+          );
+        }
+      },
+      child: Scaffold(
       appBar: AppBar(
         title: const Text('知识库'),
         automaticallyImplyLeading: false,
@@ -323,7 +373,7 @@ class _KnowledgeBasePageContentState extends State<_KnowledgeBasePageContent> {
         icon: const Icon(Icons.add),
         label: const Text('创建知识库'),
       ),
-    );
+    ));
   }
 
   Widget _buildStatsBar() {
@@ -536,10 +586,13 @@ class _KnowledgeBasePageContentState extends State<_KnowledgeBasePageContent> {
     final descriptionController = TextEditingController(text: knowledgeBase?.description ?? '');
     bool isPublic = knowledgeBase?.isPublic ?? false;
     
+    // 保存外部context的BLoC引用
+    final knowledgeBaseBloc = context.read<KnowledgeBaseBloc>();
+    
     showDialog(
       context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setState) => AlertDialog(
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (builderContext, setState) => AlertDialog(
           title: Text(knowledgeBase == null ? '创建知识库' : '编辑知识库'),
           content: Column(
             mainAxisSize: MainAxisSize.min,
@@ -575,7 +628,7 @@ class _KnowledgeBasePageContentState extends State<_KnowledgeBasePageContent> {
           ),
           actions: [
             TextButton(
-              onPressed: () => Navigator.of(context).pop(),
+              onPressed: () => Navigator.of(dialogContext).pop(),
               child: const Text('取消'),
             ),
             ElevatedButton(
@@ -590,17 +643,17 @@ class _KnowledgeBasePageContentState extends State<_KnowledgeBasePageContent> {
                   return;
                 }
                 
-                Navigator.of(context).pop();
+                Navigator.of(dialogContext).pop();
                 
                 if (knowledgeBase == null) {
-                  context.read<KnowledgeBaseBloc>().add(CreateKnowledgeBaseEvent(
+                  knowledgeBaseBloc.add(CreateKnowledgeBaseEvent(
                     type: KnowledgeBaseType.personal,
                     name: name,
                     description: description,
                     isPublic: isPublic,
                   ));
                 } else {
-                  context.read<KnowledgeBaseBloc>().add(UpdateKnowledgeBaseEvent(
+                  knowledgeBaseBloc.add(UpdateKnowledgeBaseEvent(
                     id: knowledgeBase.id,
                     name: name,
                     description: description,

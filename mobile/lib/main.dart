@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -55,13 +56,29 @@ Future<void> _setupSystemUI() async {
 /// 初始化Hydrated BLoC
 Future<void> _initializeHydratedBloc() async {
   try {
-    final storage = await HydratedStorage.build(
-      storageDirectory: await getApplicationDocumentsDirectory(),
-    );
+    late HydratedStorage storage;
+    
+    if (kIsWeb) {
+      // Web平台使用默认存储
+      storage = await HydratedStorage.build(
+        storageDirectory: HydratedStorage.webStorageDirectory,
+      );
+    } else {
+      // 移动平台使用文档目录
+      storage = await HydratedStorage.build(
+        storageDirectory: await getApplicationDocumentsDirectory(),
+      );
+    }
+    
     HydratedBloc.storage = storage;
     LoggerUtils.i('HydratedBloc 初始化成功');
   } catch (e) {
     LoggerUtils.e('HydratedBloc 初始化失败', e);
+    // 在Web平台上，如果HydratedBloc初始化失败，我们可以继续运行
+    // 只是不会有状态持久化功能
+    if (kIsWeb) {
+      LoggerUtils.w('Web平台将在没有状态持久化的情况下运行');
+    }
   }
 }
 

@@ -424,14 +424,12 @@ class ConversationRepositoryImpl implements ConversationRepository {
         return ServerFailure(message: exception.message);
       case ValidationException:
         return ValidationFailure(message: exception.message);
-      case AuthenticationException:
-        return AuthenticationFailure(message: exception.message);
-      case AuthorizationException:
-        return AuthorizationFailure(message: exception.message);
+      case AuthException:
+        return AuthFailure(message: exception.message);
       case NotFoundException:
         return NotFoundFailure(message: exception.message);
       case RateLimitException:
-        return RateLimitFailure(message: exception.message);
+        return ServerFailure(message: exception.message);
       case CacheException:
         return CacheFailure(message: exception.message);
       default:

@@ -98,7 +98,7 @@ class HomePage extends StatelessWidget {
                   icon: Icons.library_books,
                   title: '知识库',
                   description: '管理您的知识资源',
-                  onTap: () => context.go('/knowledge'),
+                  onTap: () => context.go('/knowledge-base'),
                   child: Container(
                     decoration: BoxDecoration(
                       color: Colors.blue.withValues(alpha: 0.1),

@@ -115,7 +115,7 @@ Future<void> initializeDependencies() async {
     () => AppPreferences(sharedPreferences: sl()),
   );
   
-  // Dio实例 - 配置正确的baseURL和选项
+  // 认证服务Dio实例
   sl.registerLazySingleton<Dio>(() {
     final dio = Dio();
     dio.options = BaseOptions(
@@ -129,7 +129,26 @@ Future<void> initializeDependencies() async {
       },
     );
     return dio;
-  });
+  }, instanceName: 'authDio');
+
+  // 核心服务Dio实例（知识库、文件、对话等）
+  sl.registerLazySingleton<Dio>(() {
+    final dio = Dio();
+    dio.options = BaseOptions(
+      baseUrl: 'http://localhost:3000', // 暂时使用3000端口，因为后端服务可能在这个端口
+      connectTimeout: const Duration(seconds: 30),
+      receiveTimeout: const Duration(seconds: 30),
+      sendTimeout: const Duration(seconds: 30),
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
+    );
+    return dio;
+  }, instanceName: 'coreDio');
+
+  // 默认Dio实例（向后兼容）
+  sl.registerLazySingleton<Dio>(() => sl<Dio>(instanceName: 'authDio'));
   
   // API客户端
   sl.registerLazySingleton<ApiClient>(
@@ -143,7 +162,7 @@ Future<void> initializeDependencies() async {
   // 数据源
   sl.registerLazySingleton<AuthRemoteDataSource>(
     () => AuthRemoteDataSourceImpl(
-      dio: sl(),
+      dio: sl<Dio>(instanceName: 'authDio'),
     ),
   );
   

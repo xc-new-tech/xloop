@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:dartz/dartz.dart';
+import 'package:file_picker/file_picker.dart';
 import '../../../../core/network/api_client.dart';
 import '../../../../core/network/api_endpoints.dart';
 import '../../../../core/error/exceptions.dart';
@@ -36,6 +37,21 @@ abstract class FileRemoteDataSource {
     required String category,
     List<String>? tags,
     void Function(int sent, int total)? onProgress,
+  });
+
+  /// 上传PlatformFile到服务器（支持Web和移动端）
+  /// [platformFiles] 要上传的PlatformFile列表
+  /// [knowledgeBaseId] 知识库ID
+  /// [category] 文件分类
+  /// [tags] 文件标签
+  /// [onProgress] 上传进度回调
+  /// 返回上传后的文件信息列表
+  Future<List<FileModel>> uploadPlatformFiles({
+    required List<PlatformFile> platformFiles,
+    required String knowledgeBaseId,
+    required String category,
+    List<String>? tags,
+    void Function(int count, int total)? onProgress,
   });
 
   /// 获取文件列表
@@ -120,24 +136,24 @@ class FileRemoteDataSourceImpl implements FileRemoteDataSource {
     void Function(int count, int total)? onProgress,
   }) async {
     try {
-      final List<FileModel> uploadedFiles = [];
+      final results = <FileModel>[];
       
       for (int i = 0; i < files.length; i++) {
         final file = files[i];
         onProgress?.call(i, files.length);
         
-        final uploadedFile = await uploadFile(
+        final result = await uploadFile(
           file: file,
           knowledgeBaseId: knowledgeBaseId,
           category: category,
           tags: tags,
         );
         
-        uploadedFiles.add(uploadedFile);
+        results.add(result);
       }
       
       onProgress?.call(files.length, files.length);
-      return uploadedFiles;
+      return results;
     } catch (e) {
       throw ServerException('批量上传文件失败: ${e.toString()}');
     }
@@ -152,36 +168,96 @@ class FileRemoteDataSourceImpl implements FileRemoteDataSource {
     void Function(int sent, int total)? onProgress,
   }) async {
     try {
-      // 创建FormData
-      final fileName = file.path.split('/').last;
-      final formData = FormData.fromMap({
-        'files': await MultipartFile.fromFile(
-          file.path,
-          filename: fileName,
-        ),
-        'knowledgeBaseId': knowledgeBaseId,
-        'category': category,
-        if (tags != null && tags.isNotEmpty) 'tags': tags.join(','),
-      });
-
-      // 上传文件
-      final response = await _apiClient.post(
-        ApiEndpoints.uploadFiles,
-        data: formData,
-        onSendProgress: onProgress,
+      final response = await _apiClient.uploadFile(
+        '/files/upload',
+        file.path,
+        'file',
+        fields: {
+          'knowledgeBaseId': knowledgeBaseId,
+          'category': category,
+          if (tags != null && tags.isNotEmpty) 'tags': tags.join(','),
+        },
       );
 
-      if (response.data['success'] == true) {
-        final files = response.data['data']['files'] as List;
-        if (files.isNotEmpty) {
-          return FileModel.fromJson(files.first);
+      if (response['success'] == true) {
+        final data = response['data'];
+        if (data is Map<String, dynamic>) {
+          return FileModel.fromJson(data);
+        } else if (data is List && data.isNotEmpty) {
+          return FileModel.fromJson(data.first);
         }
       }
       
       throw ServerException('上传响应格式错误');
-    } on DioException catch (e) {
-      throw _handleDioException(e, '上传文件失败');
     } catch (e) {
+      if (e is ServerException) rethrow;
+      throw ServerException('上传文件失败: ${e.toString()}');
+    }
+  }
+
+  @override
+  Future<List<FileModel>> uploadPlatformFiles({
+    required List<PlatformFile> platformFiles,
+    required String knowledgeBaseId,
+    required String category,
+    List<String>? tags,
+    void Function(int count, int total)? onProgress,
+  }) async {
+    try {
+      final results = <FileModel>[];
+      
+      for (int i = 0; i < platformFiles.length; i++) {
+        final platformFile = platformFiles[i];
+        onProgress?.call(i, platformFiles.length);
+        
+        final result = await _uploadPlatformFile(
+          platformFile: platformFile,
+          knowledgeBaseId: knowledgeBaseId,
+          category: category,
+          tags: tags,
+        );
+        
+        results.add(result);
+      }
+      
+      onProgress?.call(platformFiles.length, platformFiles.length);
+      return results;
+    } catch (e) {
+      throw ServerException('批量上传文件失败: ${e.toString()}');
+    }
+  }
+
+  /// 上传单个PlatformFile
+  Future<FileModel> _uploadPlatformFile({
+    required PlatformFile platformFile,
+    required String knowledgeBaseId,
+    required String category,
+    List<String>? tags,
+  }) async {
+    try {
+      final response = await _apiClient.uploadPlatformFile(
+        '/files/upload',
+        platformFile,
+        'file',
+        fields: {
+          'knowledgeBaseId': knowledgeBaseId,
+          'category': category,
+          if (tags != null && tags.isNotEmpty) 'tags': tags.join(','),
+        },
+      );
+
+      if (response['success'] == true) {
+        final data = response['data'];
+        if (data is Map<String, dynamic>) {
+          return FileModel.fromJson(data);
+        } else if (data is List && data.isNotEmpty) {
+          return FileModel.fromJson(data.first);
+        }
+      }
+      
+      throw ServerException('上传响应格式错误');
+    } catch (e) {
+      if (e is ServerException) rethrow;
       throw ServerException('上传文件失败: ${e.toString()}');
     }
   }
@@ -196,9 +272,9 @@ class FileRemoteDataSourceImpl implements FileRemoteDataSource {
     String? search,
   }) async {
     try {
-      final queryParams = <String, dynamic>{
-        'page': page,
-        'limit': limit,
+      final queryParams = <String, String>{
+        'page': page.toString(),
+        'limit': limit.toString(),
         if (knowledgeBaseId != null) 'knowledgeBaseId': knowledgeBaseId,
         if (category != null) 'category': category,
         if (status != null) 'status': status,
@@ -206,20 +282,19 @@ class FileRemoteDataSourceImpl implements FileRemoteDataSource {
       };
 
       final response = await _apiClient.get(
-        ApiEndpoints.getFiles,
+        '/files',
         queryParameters: queryParams,
       );
 
-      if (response.data['success'] == true) {
-        final data = response.data['data'];
+      if (response['success'] == true) {
+        final data = response['data'];
         final files = data['files'] as List;
         return files.map((json) => FileModel.fromJson(json)).toList();
       }
       
       throw ServerException('获取文件列表响应格式错误');
-    } on DioException catch (e) {
-      throw _handleDioException(e, '获取文件列表失败');
     } catch (e) {
+      if (e is ServerException) rethrow;
       throw ServerException('获取文件列表失败: ${e.toString()}');
     }
   }
@@ -227,16 +302,15 @@ class FileRemoteDataSourceImpl implements FileRemoteDataSource {
   @override
   Future<FileModel> getFileById(String fileId) async {
     try {
-      final response = await _apiClient.get('${ApiEndpoints.getFiles}/$fileId');
+      final response = await _apiClient.get('/files/$fileId');
 
-      if (response.data['success'] == true) {
-        return FileModel.fromJson(response.data['data']);
+      if (response['success'] == true) {
+        return FileModel.fromJson(response['data']);
       }
       
       throw ServerException('获取文件详情响应格式错误');
-    } on DioException catch (e) {
-      throw _handleDioException(e, '获取文件详情失败');
     } catch (e) {
+      if (e is ServerException) rethrow;
       throw ServerException('获取文件详情失败: ${e.toString()}');
     }
   }
@@ -248,16 +322,15 @@ class FileRemoteDataSourceImpl implements FileRemoteDataSource {
     void Function(int received, int total)? onProgress,
   }) async {
     try {
-      final response = await _apiClient.download(
-        '${ApiEndpoints.getFiles}/$fileId/download',
-        savePath,
-        onReceiveProgress: onProgress,
-      );
-
-      return savePath;
-    } on DioException catch (e) {
-      throw _handleDioException(e, '下载文件失败');
+      final response = await _apiClient.get('/files/$fileId/download');
+      
+      if (response['success'] == true) {
+        return savePath;
+      }
+      
+      throw ServerException('下载文件失败');
     } catch (e) {
+      if (e is ServerException) rethrow;
       throw ServerException('下载文件失败: ${e.toString()}');
     }
   }
@@ -265,11 +338,8 @@ class FileRemoteDataSourceImpl implements FileRemoteDataSource {
   @override
   Future<bool> deleteFile(String fileId) async {
     try {
-      final response = await _apiClient.delete('${ApiEndpoints.getFiles}/$fileId');
-
-      return response.data['success'] == true;
-    } on DioException catch (e) {
-      throw _handleDioException(e, '删除文件失败');
+      final response = await _apiClient.delete('/files/$fileId');
+      return response['success'] == true;
     } catch (e) {
       throw ServerException('删除文件失败: ${e.toString()}');
     }
@@ -278,19 +348,17 @@ class FileRemoteDataSourceImpl implements FileRemoteDataSource {
   @override
   Future<List<String>> deleteFiles(List<String> fileIds) async {
     try {
-      final response = await _apiClient.delete(
-        '${ApiEndpoints.getFiles}/batch',
-        data: {'fileIds': fileIds},
+      final response = await _apiClient.post(
+        '/files/batch-delete',
+        body: {'fileIds': fileIds},
       );
 
-      if (response.data['success'] == true) {
-        final deletedIds = response.data['data']['deletedIds'] as List;
+      if (response['success'] == true) {
+        final deletedIds = response['data']['deletedIds'] as List;
         return deletedIds.cast<String>();
       }
       
       return [];
-    } on DioException catch (e) {
-      throw _handleDioException(e, '批量删除文件失败');
     } catch (e) {
       throw ServerException('批量删除文件失败: ${e.toString()}');
     }
@@ -299,16 +367,15 @@ class FileRemoteDataSourceImpl implements FileRemoteDataSource {
   @override
   Future<FileModel> reparseFile(String fileId) async {
     try {
-      final response = await _apiClient.post('${ApiEndpoints.getFiles}/$fileId/reparse');
+      final response = await _apiClient.post('/files/$fileId/reparse');
 
-      if (response.data['success'] == true) {
-        return FileModel.fromJson(response.data['data']);
+      if (response['success'] == true) {
+        return FileModel.fromJson(response['data']);
       }
       
       throw ServerException('重新解析文件响应格式错误');
-    } on DioException catch (e) {
-      throw _handleDioException(e, '重新解析文件失败');
     } catch (e) {
+      if (e is ServerException) rethrow;
       throw ServerException('重新解析文件失败: ${e.toString()}');
     }
   }
@@ -327,18 +394,17 @@ class FileRemoteDataSourceImpl implements FileRemoteDataSource {
       if (tags != null) data['tags'] = tags;
 
       final response = await _apiClient.put(
-        '${ApiEndpoints.getFiles}/$fileId',
-        data: data,
+        '/files/$fileId',
+        body: data,
       );
 
-      if (response.data['success'] == true) {
-        return FileModel.fromJson(response.data['data']);
+      if (response['success'] == true) {
+        return FileModel.fromJson(response['data']);
       }
       
       throw ServerException('更新文件信息响应格式错误');
-    } on DioException catch (e) {
-      throw _handleDioException(e, '更新文件信息失败');
     } catch (e) {
+      if (e is ServerException) rethrow;
       throw ServerException('更新文件信息失败: ${e.toString()}');
     }
   }
@@ -346,65 +412,24 @@ class FileRemoteDataSourceImpl implements FileRemoteDataSource {
   @override
   Future<Map<String, dynamic>> getFileStats({String? knowledgeBaseId}) async {
     try {
-      final queryParams = <String, dynamic>{};
+      final queryParams = <String, String>{};
       if (knowledgeBaseId != null) {
         queryParams['knowledgeBaseId'] = knowledgeBaseId;
       }
 
       final response = await _apiClient.get(
-        '${ApiEndpoints.getFiles}/stats',
+        '/files/stats',
         queryParameters: queryParams,
       );
 
-      if (response.data['success'] == true) {
-        return response.data['data'] as Map<String, dynamic>;
+      if (response['success'] == true) {
+        return response['data'] as Map<String, dynamic>;
       }
       
       throw ServerException('获取文件统计信息响应格式错误');
-    } on DioException catch (e) {
-      throw _handleDioException(e, '获取文件统计信息失败');
     } catch (e) {
+      if (e is ServerException) rethrow;
       throw ServerException('获取文件统计信息失败: ${e.toString()}');
-    }
-  }
-
-  /// 处理Dio异常
-  Exception _handleDioException(DioException e, String operation) {
-    switch (e.type) {
-      case DioExceptionType.connectionTimeout:
-        return NetworkException('$operation: 连接超时');
-      case DioExceptionType.sendTimeout:
-        return NetworkException('$operation: 发送超时');
-      case DioExceptionType.receiveTimeout:
-        return NetworkException('$operation: 接收超时');
-      case DioExceptionType.badResponse:
-        final statusCode = e.response?.statusCode;
-        final message = e.response?.data?['message'] ?? e.message;
-        
-        switch (statusCode) {
-          case 400:
-            return BadRequestException('$operation: $message');
-          case 401:
-            return UnauthorizedException('$operation: 未授权访问');
-          case 403:
-            return ForbiddenException('$operation: 权限不足');
-          case 404:
-            return NotFoundException('$operation: 资源不存在');
-          case 413:
-            return BadRequestException('$operation: 文件过大');
-          case 422:
-            return ValidationException('$operation: 数据验证失败 - $message');
-          case 500:
-            return ServerException('$operation: 服务器内部错误');
-          default:
-            return ServerException('$operation: HTTP $statusCode - $message');
-        }
-      case DioExceptionType.cancel:
-        return OperationCancelledException('$operation: 操作被取消');
-      case DioExceptionType.unknown:
-        return NetworkException('$operation: 网络连接失败');
-      default:
-        return ServerException('$operation: ${e.message}');
     }
   }
 } 

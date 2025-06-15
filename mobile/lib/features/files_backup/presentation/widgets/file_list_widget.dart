@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../shared/widgets/loading_widget.dart';
-import '../../../../shared/widgets/error_widget.dart';
-import '../../../../shared/widgets/empty_state_widget.dart';
-import '../../domain/entities/file_entity.dart';
+import '../../../../features/shared/presentation/widgets/error_widget.dart';
+import '../../../../features/shared/presentation/widgets/empty_state_widget.dart';
+import '../../domain/entities/file_entity.dart' as entity;
 import '../bloc/file_bloc.dart';
 import '../bloc/file_event.dart';
 import '../bloc/file_state.dart';
@@ -211,7 +211,7 @@ class _FileListWidgetState extends State<FileListWidget> {
         }
         
         if (state is FileError) {
-          return CustomErrorWidget(
+          return AppErrorWidget(
             message: state.message,
             onRetry: () => _loadFiles(refresh: true),
           );
@@ -222,7 +222,7 @@ class _FileListWidgetState extends State<FileListWidget> {
             return EmptyStateWidget(
               icon: Icons.folder_open,
               title: '暂无文件',
-              subtitle: _searchQuery?.isNotEmpty == true 
+              message: _searchQuery?.isNotEmpty == true 
                   ? '没有找到匹配的文件'
                   : '还没有上传任何文件',
               actionText: _searchQuery?.isNotEmpty == true ? '清除搜索' : null,
@@ -265,7 +265,7 @@ class _FileListWidgetState extends State<FileListWidget> {
             return EmptyStateWidget(
               icon: Icons.search_off,
               title: '未找到文件',
-              subtitle: '没有找到匹配 "${state.query}" 的文件',
+              message: '没有找到匹配 "${state.query}" 的文件',
               actionText: '清除搜索',
               onAction: _clearSearch,
             );
@@ -297,7 +297,7 @@ class _FileListWidgetState extends State<FileListWidget> {
         return const EmptyStateWidget(
           icon: Icons.folder_open,
           title: '暂无文件',
-          subtitle: '还没有上传任何文件',
+          message: '还没有上传任何文件',
         );
       },
     );
@@ -381,7 +381,7 @@ class _FileListWidgetState extends State<FileListWidget> {
     }
   }
 
-  void _onFileItemTap(FileEntity file) {
+  void _onFileItemTap(entity.FileEntity file) {
     widget.onFileSelected?.call();
     
     // 导航到文件详情页

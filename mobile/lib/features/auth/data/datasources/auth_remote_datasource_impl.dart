@@ -475,34 +475,49 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
         final statusCode = e.response?.statusCode;
         final data = e.response?.data;
         
+        // 安全地提取错误消息
+        String _extractMessage(dynamic data, String defaultMessage) {
+          try {
+            if (data is Map<String, dynamic>) {
+              final message = data['message'];
+              if (message is String) {
+                return message;
+              }
+            }
+            return defaultMessage;
+          } catch (e) {
+            return defaultMessage;
+          }
+        }
+        
         switch (statusCode) {
           case ApiConstants.badRequest:
-            final message = data?['message'] ?? '请求参数错误';
+            final message = _extractMessage(data, '请求参数错误');
             throw ValidationException(message: message);
           
           case ApiConstants.unauthorized:
-            final message = data?['message'] ?? '未授权访问';
+            final message = _extractMessage(data, '未授权访问');
             throw AuthException(message: message);
           
           case ApiConstants.forbidden:
-            final message = data?['message'] ?? '禁止访问';
+            final message = _extractMessage(data, '禁止访问');
             throw AuthException(message: message);
           
           case ApiConstants.notFound:
-            final message = data?['message'] ?? '请求的资源不存在';
+            final message = _extractMessage(data, '请求的资源不存在');
             throw ServerException(message: message);
           
           case ApiConstants.conflict:
-            final message = data?['message'] ?? '数据冲突';
+            final message = _extractMessage(data, '数据冲突');
             throw ValidationException(message: message);
           
           case ApiConstants.tooManyRequests:
-            final message = data?['message'] ?? '请求过于频繁，请稍后重试';
+            final message = _extractMessage(data, '请求过于频繁，请稍后重试');
             throw NetworkException(message: message);
           
           case ApiConstants.internalServerError:
           default:
-            final message = data?['message'] ?? '服务器内部错误';
+            final message = _extractMessage(data, '服务器内部错误');
             throw ServerException(message: message);
         }
       

@@ -1,7 +1,7 @@
 import 'package:dartz/dartz.dart';
 
-import '../../../../core/errors/failures.dart';
-import '../../../../core/errors/exceptions.dart';
+import '../../../../core/error/failures.dart';
+import '../../../../core/error/exceptions.dart';
 import '../../../../core/network/network_info.dart';
 import '../../domain/entities/search_result.dart';
 import '../../domain/repositories/search_repository.dart';
@@ -111,15 +111,23 @@ class SearchRepositoryImpl implements SearchRepository {
   }
 
   @override
-  Future<Either<Failure, void>> vectorizeDocument(String documentId) async {
+  Future<Either<Failure, Unit>> vectorizeDocument(
+    String documentId,
+    String content, [
+    Map<String, dynamic>? metadata,
+  ]) async {
     if (!await _networkInfo.isConnected) {
       return const Left(NetworkFailure(message: '网络连接不可用'));
     }
 
     try {
-      final request = VectorizeDocumentRequest(documentId: documentId);
+      final request = VectorizeDocumentRequest(
+        documentId: documentId,
+        content: content,
+        metadata: metadata,
+      );
       await _remoteDataSource.vectorizeDocument(request);
-      return const Right(null);
+      return const Right(unit);
     } on ServerException catch (e) {
       return Left(ServerFailure(
         message: e.message,
@@ -131,15 +139,25 @@ class SearchRepositoryImpl implements SearchRepository {
   }
 
   @override
-  Future<Either<Failure, void>> vectorizeFaq(String faqId) async {
+  Future<Either<Failure, Unit>> vectorizeFaq(
+    String faqId,
+    String question,
+    String answer, [
+    Map<String, dynamic>? metadata,
+  ]) async {
     if (!await _networkInfo.isConnected) {
       return const Left(NetworkFailure(message: '网络连接不可用'));
     }
 
     try {
-      final request = VectorizeFaqRequest(faqId: faqId);
+      final request = VectorizeFaqRequest(
+        faqId: faqId,
+        question: question,
+        answer: answer,
+        metadata: metadata,
+      );
       await _remoteDataSource.vectorizeFaq(request);
-      return const Right(null);
+      return const Right(unit);
     } on ServerException catch (e) {
       return Left(ServerFailure(
         message: e.message,
@@ -152,8 +170,8 @@ class SearchRepositoryImpl implements SearchRepository {
 
   @override
   Future<Either<Failure, BatchVectorizeResult>> batchVectorize(
-    List<String> documentIds,
-    List<String> faqIds,
+    String type,
+    List<Map<String, dynamic>> items,
   ) async {
     if (!await _networkInfo.isConnected) {
       return const Left(NetworkFailure(message: '网络连接不可用'));
@@ -161,8 +179,8 @@ class SearchRepositoryImpl implements SearchRepository {
 
     try {
       final request = BatchVectorizeRequest(
-        documentIds: documentIds,
-        faqIds: faqIds,
+        type: type,
+        items: items,
       );
       final result = await _remoteDataSource.batchVectorize(request);
       return Right(result.toEntity());
@@ -196,14 +214,14 @@ class SearchRepositoryImpl implements SearchRepository {
   }
 
   @override
-  Future<Either<Failure, void>> clearCache([String? pattern]) async {
+  Future<Either<Failure, Unit>> clearCache([String? pattern]) async {
     if (!await _networkInfo.isConnected) {
       return const Left(NetworkFailure(message: '网络连接不可用'));
     }
 
     try {
       await _remoteDataSource.clearCache(pattern);
-      return const Right(null);
+      return const Right(unit);
     } on ServerException catch (e) {
       return Left(ServerFailure(
         message: e.message,

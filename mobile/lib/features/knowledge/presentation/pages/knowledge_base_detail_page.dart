@@ -2,11 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/theme/app_colors.dart';
-import '../../../../shared/widgets/custom_app_bar.dart';
-import '../../../../shared/widgets/error_widget.dart';
-import '../../../../shared/widgets/loading_widget.dart';
+import '../../../../features/shared/presentation/widgets/custom_app_bar.dart';
+import '../../../../features/shared/presentation/widgets/error_widget.dart';
+import '../../../../features/shared/presentation/widgets/loading_widget.dart';
 import '../../domain/entities/knowledge_base.dart';
 import '../bloc/knowledge_base_bloc.dart';
+import '../bloc/knowledge_base_event.dart';
+import '../bloc/knowledge_base_state.dart';
 
 class KnowledgeBaseDetailPage extends StatefulWidget {
   final String knowledgeBaseId;
@@ -200,7 +202,7 @@ class _KnowledgeBaseDetailPageState extends State<KnowledgeBaseDetailPage>
     }
 
     if (state is KnowledgeBaseError) {
-      return ErrorWidgetCustom(
+      return AppErrorWidget(
         message: state.message,
         onRetry: _loadKnowledgeBase,
       );

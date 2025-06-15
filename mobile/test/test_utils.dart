@@ -186,7 +186,7 @@ class TestUtils {
 }
 
 /// Mock对象基类
-class MockObject<T extends Object> extends Mock implements T {}
+class MockObject<T extends Object> extends Mock {}
 
 /// 超时异常
 class TimeoutException implements Exception {

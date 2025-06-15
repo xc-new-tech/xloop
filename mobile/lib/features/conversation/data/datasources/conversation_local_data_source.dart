@@ -58,7 +58,7 @@ class ConversationLocalDataSourceImpl implements ConversationLocalDataSource {
 
       return conversations;
     } catch (e) {
-      throw CacheException(message: '获取缓存对话列表失败: $e');
+      throw CacheException('获取缓存对话列表失败: $e');
     }
   }
 
@@ -79,7 +79,7 @@ class ConversationLocalDataSourceImpl implements ConversationLocalDataSource {
       // 更新缓存统计
       await _updateCacheStats();
     } catch (e) {
-      throw CacheException(message: '缓存对话失败: $e');
+      throw CacheException('缓存对话失败: $e');
     }
   }
 
@@ -105,7 +105,7 @@ class ConversationLocalDataSourceImpl implements ConversationLocalDataSource {
       // 更新缓存统计
       await _updateCacheStats();
     } catch (e) {
-      throw CacheException(message: '批量缓存对话失败: $e');
+      throw CacheException('批量缓存对话失败: $e');
     }
   }
 
@@ -138,7 +138,7 @@ class ConversationLocalDataSourceImpl implements ConversationLocalDataSource {
       // 更新缓存统计
       await _updateCacheStats();
     } catch (e) {
-      throw CacheException(message: '删除缓存对话失败: $e');
+      throw CacheException('删除缓存对话失败: $e');
     }
   }
 
@@ -159,7 +159,7 @@ class ConversationLocalDataSourceImpl implements ConversationLocalDataSource {
       // 清空缓存统计
       await _prefs.remove(_cacheStatsKey);
     } catch (e) {
-      throw CacheException(message: '清空对话缓存失败: $e');
+      throw CacheException('清空对话缓存失败: $e');
     }
   }
 

@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
 
-import '../../../../core/widgets/error_widget.dart';
+import '../../../shared/presentation/widgets/error_widget.dart';
 import '../../../../core/widgets/loading_widget.dart';
-import '../../../../core/widgets/empty_state_widget.dart';
+import '../../../shared/presentation/widgets/empty_state_widget.dart';
 import '../../domain/entities/conversation.dart';
 import '../bloc/conversation_bloc.dart';
 import '../bloc/conversation_event.dart';
@@ -120,7 +120,7 @@ class _ConversationListPageState extends State<ConversationListPage> {
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (context) => CreateConversationPage(
-          knowledgeBaseId: widget.knowledgeBaseId,
+          initialKnowledgeBaseId: widget.knowledgeBaseId,
         ),
       ),
     );
@@ -270,7 +270,7 @@ class _ConversationListPageState extends State<ConversationListPage> {
                   }
                   
                   if (state is ConversationError) {
-                    return ErrorRetryWidget(
+                    return AppErrorWidget(
                       message: state.message,
                       onRetry: _onRefresh,
                     );
@@ -283,7 +283,7 @@ class _ConversationListPageState extends State<ConversationListPage> {
                       return EmptyStateWidget(
                         icon: Icons.chat_bubble_outline,
                         title: state.hasActiveFilters ? '没有找到匹配的对话' : '还没有对话',
-                        subtitle: state.hasActiveFilters 
+                        message: state.hasActiveFilters 
                             ? '尝试调整筛选条件' 
                             : '点击下方按钮创建第一个对话',
                         actionText: state.hasActiveFilters ? '清除筛选' : '创建对话',
@@ -362,7 +362,7 @@ class _ConversationListPageState extends State<ConversationListPage> {
                   return const EmptyStateWidget(
                     icon: Icons.chat_bubble_outline,
                     title: '加载对话中...',
-                    subtitle: '请稍候',
+                    message: '请稍候',
                   );
                 },
               ),

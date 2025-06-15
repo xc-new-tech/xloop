@@ -437,6 +437,8 @@ class _ConversationInfoSheetState extends State<ConversationInfoSheet> {
         return '问答对话';
       case ConversationType.support:
         return '客服对话';
+      case ConversationType.search:
+        return '搜索对话';
     }
   }
 
@@ -444,12 +446,10 @@ class _ConversationInfoSheetState extends State<ConversationInfoSheet> {
     switch (status) {
       case ConversationStatus.active:
         return '活跃';
-      case ConversationStatus.paused:
-        return '暂停';
-      case ConversationStatus.completed:
-        return '完成';
+      case ConversationStatus.ended:
+        return '已结束';
       case ConversationStatus.archived:
-        return '归档';
+        return '已归档';
     }
   }
 } 

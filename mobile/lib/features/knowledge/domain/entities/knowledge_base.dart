@@ -1,11 +1,12 @@
 import 'package:equatable/equatable.dart';
+import 'package:flutter/material.dart';
 
 /// 知识库实体
 class KnowledgeBase extends Equatable {
   final String id;
   final String name;
   final String? description;
-  final String ownerId;
+  final String? ownerId;
   final KnowledgeBaseType type;
   final KnowledgeBaseStatus status;
   final Map<String, dynamic>? settings;
@@ -19,14 +20,14 @@ class KnowledgeBase extends Equatable {
   final DateTime lastActivity;
   final DateTime createdAt;
   final DateTime? updatedAt;
-  final String createdBy;
+  final String? createdBy;
   final String? updatedBy;
 
   const KnowledgeBase({
     required this.id,
     required this.name,
     this.description,
-    required this.ownerId,
+    this.ownerId,
     required this.type,
     required this.status,
     this.settings,
@@ -40,7 +41,7 @@ class KnowledgeBase extends Equatable {
     required this.lastActivity,
     required this.createdAt,
     this.updatedAt,
-    required this.createdBy,
+    this.createdBy,
     this.updatedBy,
   });
 
@@ -137,6 +138,62 @@ class KnowledgeBase extends Equatable {
     if (totalSize < 1024 * 1024 * 1024) return '${(totalSize / (1024 * 1024)).toStringAsFixed(1)}MB';
     return '${(totalSize / (1024 * 1024 * 1024)).toStringAsFixed(1)}GB';
   }
+
+  /// 获取所有者名称（暂时返回ID，实际应该从用户服务获取）
+  String get ownerName => ownerId ?? 'unknown';
+
+  /// 获取格式化的创建时间
+  String get formattedCreatedAt {
+    final now = DateTime.now();
+    final difference = now.difference(createdAt);
+    
+    if (difference.inDays > 0) {
+      return '${difference.inDays}天前';
+    } else if (difference.inHours > 0) {
+      return '${difference.inHours}小时前';
+    } else if (difference.inMinutes > 0) {
+      return '${difference.inMinutes}分钟前';
+    } else {
+      return '刚刚';
+    }
+  }
+
+  /// 获取格式化的更新时间
+  String get formattedUpdatedAt {
+    if (updatedAt == null) return '未更新';
+    
+    final now = DateTime.now();
+    final difference = now.difference(updatedAt!);
+    
+    if (difference.inDays > 0) {
+      return '${difference.inDays}天前';
+    } else if (difference.inHours > 0) {
+      return '${difference.inHours}小时前';
+    } else if (difference.inMinutes > 0) {
+      return '${difference.inMinutes}分钟前';
+    } else {
+      return '刚刚';
+    }
+  }
+
+  /// 获取格式化的最后活动时间
+  String get formattedLastActivity {
+    final now = DateTime.now();
+    final difference = now.difference(lastActivity);
+    
+    if (difference.inDays > 0) {
+      return '${difference.inDays}天前';
+    } else if (difference.inHours > 0) {
+      return '${difference.inHours}小时前';
+    } else if (difference.inMinutes > 0) {
+      return '${difference.inMinutes}分钟前';
+    } else {
+      return '刚刚';
+    }
+  }
+
+  /// 获取向量数量（暂时返回文档数量，实际应该从向量存储获取）
+  int get vectorCount => documentCount;
 }
 
 /// 知识库状态枚举
@@ -176,6 +233,17 @@ extension KnowledgeBaseStatusExtension on KnowledgeBaseStatus {
         return 'disabled';
     }
   }
+
+  Color get color {
+    switch (this) {
+      case KnowledgeBaseStatus.active:
+        return const Color(0xFF4CAF50); // 绿色
+      case KnowledgeBaseStatus.archived:
+        return const Color(0xFFFF9800); // 橙色
+      case KnowledgeBaseStatus.disabled:
+        return const Color(0xFFF44336); // 红色
+    }
+  }
 }
 
 /// 知识库类型扩展
@@ -199,6 +267,17 @@ extension KnowledgeBaseTypeExtension on KnowledgeBaseType {
         return 'team';
       case KnowledgeBaseType.public:
         return 'public';
+    }
+  }
+
+  IconData get icon {
+    switch (this) {
+      case KnowledgeBaseType.personal:
+        return Icons.person;
+      case KnowledgeBaseType.team:
+        return Icons.group;
+      case KnowledgeBaseType.public:
+        return Icons.public;
     }
   }
 } 

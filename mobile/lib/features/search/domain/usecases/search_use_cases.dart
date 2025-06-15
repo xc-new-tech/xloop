@@ -1,6 +1,6 @@
 import 'package:dartz/dartz.dart';
 
-import '../../../../core/errors/failures.dart';
+import '../../../../core/error/failures.dart';
 import '../../../../core/usecases/usecase.dart';
 import '../entities/search_result.dart';
 import '../repositories/search_repository.dart';
@@ -54,26 +54,35 @@ class GetRecommendationsUseCase implements UseCase<HybridSearchResults, Recommen
 }
 
 /// 文档向量化用例
-class VectorizeDocumentUseCase implements UseCase<void, VectorizeDocumentParams> {
+class VectorizeDocumentUseCase implements UseCase<Unit, VectorizeDocumentParams> {
   final SearchRepository _repository;
 
   const VectorizeDocumentUseCase(this._repository);
 
   @override
-  Future<Either<Failure, void>> call(VectorizeDocumentParams params) {
-    return _repository.vectorizeDocument(params.documentId);
+  Future<Either<Failure, Unit>> call(VectorizeDocumentParams params) {
+    return _repository.vectorizeDocument(
+      params.documentId,
+      params.content,
+      params.metadata,
+    );
   }
 }
 
 /// FAQ向量化用例
-class VectorizeFaqUseCase implements UseCase<void, VectorizeFaqParams> {
+class VectorizeFaqUseCase implements UseCase<Unit, VectorizeFaqParams> {
   final SearchRepository _repository;
 
   const VectorizeFaqUseCase(this._repository);
 
   @override
-  Future<Either<Failure, void>> call(VectorizeFaqParams params) {
-    return _repository.vectorizeFaq(params.faqId);
+  Future<Either<Failure, Unit>> call(VectorizeFaqParams params) {
+    return _repository.vectorizeFaq(
+      params.faqId,
+      params.question,
+      params.answer,
+      params.metadata,
+    );
   }
 }
 
@@ -85,7 +94,7 @@ class BatchVectorizeUseCase implements UseCase<BatchVectorizeResult, BatchVector
 
   @override
   Future<Either<Failure, BatchVectorizeResult>> call(BatchVectorizeParams params) {
-    return _repository.batchVectorize(params.documentIds, params.faqIds);
+    return _repository.batchVectorize(params.type, params.items);
   }
 }
 
@@ -102,13 +111,13 @@ class GetSearchStatsUseCase implements UseCase<SearchStats, NoParams> {
 }
 
 /// 清理缓存用例
-class ClearCacheUseCase implements UseCase<void, ClearCacheParams> {
+class ClearCacheUseCase implements UseCase<Unit, ClearCacheParams> {
   final SearchRepository _repository;
 
   const ClearCacheUseCase(this._repository);
 
   @override
-  Future<Either<Failure, void>> call(ClearCacheParams params) {
+  Future<Either<Failure, Unit>> call(ClearCacheParams params) {
     return _repository.clearCache(params.pattern);
   }
 }
@@ -150,29 +159,39 @@ class RecommendationParams {
 /// 文档向量化参数
 class VectorizeDocumentParams {
   final String documentId;
+  final String content;
+  final Map<String, dynamic>? metadata;
 
   const VectorizeDocumentParams({
     required this.documentId,
+    required this.content,
+    this.metadata,
   });
 }
 
 /// FAQ向量化参数
 class VectorizeFaqParams {
   final String faqId;
+  final String question;
+  final String answer;
+  final Map<String, dynamic>? metadata;
 
   const VectorizeFaqParams({
     required this.faqId,
+    required this.question,
+    required this.answer,
+    this.metadata,
   });
 }
 
 /// 批量向量化参数
 class BatchVectorizeParams {
-  final List<String> documentIds;
-  final List<String> faqIds;
+  final String type;
+  final List<Map<String, dynamic>> items;
 
   const BatchVectorizeParams({
-    this.documentIds = const [],
-    this.faqIds = const [],
+    required this.type,
+    required this.items,
   });
 }
 

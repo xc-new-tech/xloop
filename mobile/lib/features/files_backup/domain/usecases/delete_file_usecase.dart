@@ -1,5 +1,5 @@
 import 'package:dartz/dartz.dart';
-import '../../../../core/errors/failures.dart';
+import '../../../../core/error/failures.dart';
 import '../../../../core/usecases/usecase.dart';
 import '../repositories/file_repository.dart';
 
@@ -11,7 +11,11 @@ class DeleteFileUseCase implements UseCase<void, DeleteFileParams> {
 
   @override
   Future<Either<Failure, void>> call(DeleteFileParams params) async {
-    return await repository.deleteFile(params.fileId);
+    final result = await repository.deleteFile(params.fileId);
+    return result.fold(
+      (failure) => Left(failure),
+      (success) => const Right(null),
+    );
   }
 }
 
@@ -42,7 +46,11 @@ class DeleteFilesUseCase implements UseCase<void, DeleteFilesParams> {
 
   @override
   Future<Either<Failure, void>> call(DeleteFilesParams params) async {
-    return await repository.deleteFiles(params.fileIds);
+    final result = await repository.deleteFiles(params.fileIds);
+    return result.fold(
+      (failure) => Left(failure),
+      (deletedIds) => const Right(null),
+    );
   }
 }
 

@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart' as http;
+import 'package:file_picker/file_picker.dart';
 
 import '../constants/api_constants.dart';
 import '../error/exceptions.dart';
@@ -173,6 +174,61 @@ class ApiClient {
 
       // 添加文件
       final file = await http.MultipartFile.fromPath(fieldName, filePath);
+      request.files.add(file);
+
+      // 添加其他字段
+      if (fields != null) {
+        request.fields.addAll(fields);
+      }
+
+      final streamedResponse = await request.send().timeout(_timeoutDuration);
+      final response = await http.Response.fromStream(streamedResponse);
+
+      return _handleResponse(response);
+    } on SocketException {
+      throw NetworkException('网络连接失败');
+    } on HttpException {
+      throw NetworkException('HTTP请求失败');
+    } on FormatException {
+      throw ServerException('服务器响应格式错误');
+    }
+  }
+
+  /// PlatformFile上传（支持Web和移动端）
+  Future<Map<String, dynamic>> uploadPlatformFile(
+    String endpoint,
+    PlatformFile platformFile,
+    String fieldName, {
+    Map<String, String>? fields,
+  }) async {
+    try {
+      final uri = _buildUri(endpoint);
+      final request = http.MultipartRequest('POST', uri);
+
+      // 添加headers
+      request.headers.addAll(_headers);
+      request.headers.remove('Content-Type'); // 让http包自动设置
+
+      // 添加文件
+      http.MultipartFile file;
+      if (platformFile.bytes != null) {
+        // Web平台使用bytes
+        file = http.MultipartFile.fromBytes(
+          fieldName,
+          platformFile.bytes!,
+          filename: platformFile.name,
+        );
+      } else if (platformFile.path != null) {
+        // 移动端使用path
+        file = await http.MultipartFile.fromPath(
+          fieldName,
+          platformFile.path!,
+          filename: platformFile.name,
+        );
+      } else {
+        throw ServerException('文件数据无效');
+      }
+      
       request.files.add(file);
 
       // 添加其他字段

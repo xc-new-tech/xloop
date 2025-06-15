@@ -6,9 +6,11 @@ import 'package:dotted_border/dotted_border.dart';
 import 'package:mime/mime.dart';
 
 import '../bloc/file_bloc.dart';
+import '../bloc/file_state.dart';
+import '../bloc/file_event.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
-import '../../../../core/constants/file_constants.dart';
+import '../../../../core/constants/file_constants.dart' as constants;
 
 /// 文件上传组件
 class FileUploadWidget extends StatefulWidget {
@@ -239,8 +241,8 @@ class _FileUploadWidgetState extends State<FileUploadWidget> {
 
   String _buildSupportText() {
     final extensions = widget.allowedExtensions?.join(', ') ?? 
-        FileConstants.supportedExtensions.join(', ');
-    final maxSize = widget.maxFileSize ?? FileConstants.maxFileSize;
+        constants.FileConstants.supportedExtensions.join(', ');
+    final maxSize = widget.maxFileSize ?? constants.FileConstants.maxFileSize;
     final maxSizeText = _formatFileSize(maxSize);
     
     return '支持格式: $extensions\n最大文件大小: $maxSizeText';
@@ -297,7 +299,7 @@ class _FileUploadWidgetState extends State<FileUploadWidget> {
       final result = await FilePicker.platform.pickFiles(
         allowMultiple: widget.allowMultiple,
         type: FileType.custom,
-        allowedExtensions: widget.allowedExtensions ?? FileConstants.supportedExtensions,
+        allowedExtensions: widget.allowedExtensions ?? constants.FileConstants.supportedExtensions,
       );
 
       if (result != null) {
@@ -372,9 +374,10 @@ class _FileUploadWidgetState extends State<FileUploadWidget> {
     if (_selectedFiles.isEmpty) return;
 
     final fileBloc = context.read<FileBloc>();
-    fileBloc.add(UploadFilesEvent(
-      files: _selectedFiles,
-      knowledgeBaseId: widget.knowledgeBaseId,
+    fileBloc.add(UploadPlatformFilesEvent(
+      platformFiles: _selectedFiles,
+      knowledgeBaseId: widget.knowledgeBaseId ?? '',
+      category: 'document', // 默认分类
     ));
   }
 

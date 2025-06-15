@@ -414,4 +414,106 @@ enum BatchOperationType {
   sync,
   delete,
   updateConfig,
+}
+
+// ==================== 仪表板事件 ====================
+
+/// 加载数据概览
+class LoadDataOverviewEvent extends DataManagementEvent {
+  const LoadDataOverviewEvent();
+}
+
+/// 加载备份状态
+class LoadBackupStatusEvent extends DataManagementEvent {
+  const LoadBackupStatusEvent();
+}
+
+/// 加载数据质量
+class LoadDataQualityEvent extends DataManagementEvent {
+  const LoadDataQualityEvent();
+}
+
+/// 加载审计日志
+class LoadAuditLogsEvent extends DataManagementEvent {
+  const LoadAuditLogsEvent();
+}
+
+/// 刷新数据
+class RefreshDataEvent extends DataManagementEvent {
+  const RefreshDataEvent();
+}
+
+/// 导出数据事件
+class ExportDataEvent extends DataManagementEvent {
+  final String? type;
+  
+  const ExportDataEvent({this.type});
+  
+  @override
+  List<Object?> get props => [type];
+}
+
+/// 导入数据事件
+class ImportDataEvent extends DataManagementEvent {
+  final String filePath;
+  
+  const ImportDataEvent(this.filePath);
+  
+  @override
+  List<Object?> get props => [filePath];
+}
+
+/// 清理数据事件
+class CleanupDataEvent extends DataManagementEvent {
+  const CleanupDataEvent();
+}
+
+/// 创建备份事件
+class CreateBackupEvent extends DataManagementEvent {
+  const CreateBackupEvent();
+}
+
+/// 恢复备份事件
+class RestoreBackupEvent extends DataManagementEvent {
+  final String backupId;
+  
+  const RestoreBackupEvent(this.backupId);
+  
+  @override
+  List<Object?> get props => [backupId];
+}
+
+/// 删除备份事件
+class DeleteBackupEvent extends DataManagementEvent {
+  final String backupId;
+  
+  const DeleteBackupEvent(this.backupId);
+  
+  @override
+  List<Object?> get props => [backupId];
+}
+
+/// 同步数据事件
+class SyncDataEvent extends DataManagementEvent {
+  const SyncDataEvent();
+}
+
+/// 导出全部数据事件
+class ExportAllDataEvent extends DataManagementEvent {
+  const ExportAllDataEvent();
+}
+
+/// 下载备份事件
+class DownloadBackupEvent extends DataManagementEvent {
+  final String backupId;
+  
+  const DownloadBackupEvent(this.backupId);
+  
+  @override
+  List<Object?> get props => [backupId];
+}
+
+/// 强制同步事件
+class ForceSyncEvent extends DataManagementEvent {
+  const ForceSyncEvent();
 } 

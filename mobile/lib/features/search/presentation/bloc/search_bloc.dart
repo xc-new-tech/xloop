@@ -2,8 +2,9 @@ import 'dart:async';
 
 import 'package:bloc/bloc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:equatable/equatable.dart';
 
-import '../../../../core/usecases/usecase.dart';
 import '../../domain/entities/search_result.dart';
 import '../../domain/usecases/search_use_cases.dart';
 import 'search_event.dart';
@@ -68,7 +69,7 @@ class SearchBloc extends Bloc<SearchEvent, SearchState> {
       return;
     }
 
-    emit(SearchLoading(searchType: SearchType.hybrid));
+    emit(const SearchLoading());
 
     _lastQuery = event.query;
     _currentSearchType = SearchType.hybrid;
@@ -107,7 +108,7 @@ class SearchBloc extends Bloc<SearchEvent, SearchState> {
       return;
     }
 
-    emit(SearchLoading(searchType: SearchType.documents));
+    emit(const SearchLoading());
 
     _lastQuery = event.query;
     _currentSearchType = SearchType.documents;
@@ -146,7 +147,7 @@ class SearchBloc extends Bloc<SearchEvent, SearchState> {
       return;
     }
 
-    emit(SearchLoading(searchType: SearchType.faqs));
+    emit(const SearchLoading());
 
     _lastQuery = event.query;
     _currentSearchType = SearchType.faqs;
@@ -180,7 +181,7 @@ class SearchBloc extends Bloc<SearchEvent, SearchState> {
     RecommendationsRequested event,
     Emitter<SearchState> emit,
   ) async {
-    emit(SearchLoading(searchType: SearchType.recommendations));
+    emit(const SearchLoading());
 
     _currentSearchType = SearchType.recommendations;
 
@@ -349,6 +350,9 @@ class SearchBloc extends Bloc<SearchEvent, SearchState> {
                 ...currentState.hybridResults!.faqs,
                 ...newResults.faqs,
               ],
+              total: (currentState.hybridResults!.documents.length + newResults.documents.length) +
+                     (currentState.hybridResults!.faqs.length + newResults.faqs.length),
+              timestamp: DateTime.now(),
               totalDocuments: newResults.totalDocuments,
               totalFaqs: newResults.totalFaqs,
             );

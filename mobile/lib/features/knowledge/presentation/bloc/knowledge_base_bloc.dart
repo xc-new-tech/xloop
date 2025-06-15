@@ -49,6 +49,7 @@ class KnowledgeBaseBloc extends Bloc<KnowledgeBaseEvent, KnowledgeBaseState> {
         _localizationManager = localizationManager,
         _logger = logger,
         super(const KnowledgeBaseInitial()) {
+    on<LoadKnowledgeBasesEvent>(_onLoadKnowledgeBases);
     on<GetKnowledgeBasesEvent>(_onGetKnowledgeBases);
     on<GetMyKnowledgeBasesEvent>(_onGetMyKnowledgeBases);
     on<GetPublicKnowledgeBasesEvent>(_onGetPublicKnowledgeBases);
@@ -69,6 +70,15 @@ class KnowledgeBaseBloc extends Bloc<KnowledgeBaseEvent, KnowledgeBaseState> {
     on<BatchUpdateKnowledgeBaseStatusEvent>(_onBatchUpdateKnowledgeBaseStatus);
     on<LoadMoreKnowledgeBasesEvent>(_onLoadMoreKnowledgeBases);
     on<ResetKnowledgeBaseStateEvent>(_onResetKnowledgeBaseState);
+  }
+
+  /// 加载知识库列表（默认加载）
+  Future<void> _onLoadKnowledgeBases(
+    LoadKnowledgeBasesEvent event,
+    Emitter<KnowledgeBaseState> emit,
+  ) async {
+    // 默认加载所有知识库
+    add(const GetKnowledgeBasesEvent());
   }
 
   /// 获取知识库列表

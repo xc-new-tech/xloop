@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:equatable/equatable.dart';
+import 'package:file_picker/file_picker.dart';
 
 /// 文件事件基类
 abstract class FileEvent extends Equatable {
@@ -85,6 +86,24 @@ class UploadFileEvent extends FileEvent {
 
   @override
   List<Object?> get props => [file, knowledgeBaseId, category, tags];
+}
+
+/// 上传PlatformFile事件（支持Web和移动端）
+class UploadPlatformFilesEvent extends FileEvent {
+  final List<PlatformFile> platformFiles;
+  final String knowledgeBaseId;
+  final String category;
+  final List<String>? tags;
+
+  const UploadPlatformFilesEvent({
+    required this.platformFiles,
+    required this.knowledgeBaseId,
+    required this.category,
+    this.tags,
+  });
+
+  @override
+  List<Object?> get props => [platformFiles, knowledgeBaseId, category, tags];
 }
 
 /// 下载文件事件

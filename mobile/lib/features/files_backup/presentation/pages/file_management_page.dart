@@ -12,7 +12,7 @@ import '../bloc/file_bloc.dart';
 import '../widgets/file_upload_widget.dart';
 import '../widgets/file_list_widget.dart';
 import '../widgets/file_preview_widget.dart';
-import '../../domain/entities/file_entity.dart';
+import '../../domain/entities/file_entity.dart' as entity;
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/constants/file_constants.dart';
 import '../../../../features/shared/presentation/widgets/custom_app_bar.dart';
@@ -37,7 +37,7 @@ class _FileManagementPageState extends State<FileManagementPage>
   late TabController _tabController;
   String _searchQuery = '';
   FileType? _selectedFileType;
-  FileStatus? _selectedFileStatus;
+  entity.FileStatus? _selectedFileStatus;
 
   @override
   void initState() {
@@ -240,7 +240,7 @@ class _FileManagementPageState extends State<FileManagementPage>
           );
         }
 
-        if (state is FileLoaded) {
+        if (state is FileListLoaded) {
           final filteredFiles = _filterFiles(state.files);
           
           return Column(
@@ -267,9 +267,9 @@ class _FileManagementPageState extends State<FileManagementPage>
     );
   }
 
-  Widget _buildFileStats(List<FileEntity> files) {
-    final totalSize = files.fold<int>(0, (sum, file) => sum + file.size);
-    final completedFiles = files.where((f) => f.status == FileStatus.completed).length;
+  Widget _buildFileStats(List<entity.FileEntity> files) {
+    final totalSize = files.fold<int>(0, (sum, file) => sum + (file.size ?? 0));
+    final completedFiles = files.where((f) => f.status == entity.FileStatus.processed).length;
     
     return Container(
       padding: const EdgeInsets.all(16),
@@ -553,7 +553,7 @@ class _FileManagementPageState extends State<FileManagementPage>
               ),
               const SizedBox(height: 16),
               _buildStatusFilterOption('全部', null, _selectedFileStatus),
-              ...FileStatus.values.map((status) => 
+              ...entity.FileStatus.values.map((status) => 
                 _buildStatusFilterOption(_getStatusText(status), status, _selectedFileStatus)
               ),
             ],
@@ -585,7 +585,7 @@ class _FileManagementPageState extends State<FileManagementPage>
     );
   }
 
-  Widget _buildStatusFilterOption(String text, FileStatus? status, FileStatus? selectedStatus) {
+  Widget _buildStatusFilterOption(String text, entity.FileStatus? status, entity.FileStatus? selectedStatus) {
     final isSelected = status == selectedStatus;
     
     return ListTile(
@@ -620,7 +620,7 @@ class _FileManagementPageState extends State<FileManagementPage>
     });
   }
 
-  List<FileEntity> _filterFiles(List<FileEntity> files) {
+  List<entity.FileEntity> _filterFiles(List<entity.FileEntity> files) {
     return files.where((file) {
       // 搜索过滤
       if (_searchQuery.isNotEmpty && 
@@ -643,7 +643,7 @@ class _FileManagementPageState extends State<FileManagementPage>
     }).toList();
   }
 
-  void _showFileDetails(FileEntity file) {
+  void _showFileDetails(entity.FileEntity file) {
     // 显示文件详情或预览
     showDialog(
       context: context,
@@ -711,20 +711,16 @@ class _FileManagementPageState extends State<FileManagementPage>
     }
   }
 
-  String _getStatusText(FileStatus status) {
+  String _getStatusText(entity.FileStatus status) {
     switch (status) {
-      case FileStatus.pending:
-        return '等待中';
-      case FileStatus.uploading:
+      case entity.FileStatus.uploading:
         return '上传中';
-      case FileStatus.processing:
+      case entity.FileStatus.processing:
         return '处理中';
-      case FileStatus.completed:
+      case entity.FileStatus.processed:
         return '已完成';
-      case FileStatus.failed:
+      case entity.FileStatus.failed:
         return '失败';
-      case FileStatus.deleted:
-        return '已删除';
     }
   }
 } 

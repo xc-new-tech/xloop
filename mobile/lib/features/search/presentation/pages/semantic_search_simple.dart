@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../domain/entities/search_result.dart';
 
 /// 简化的语义搜索页面
 /// 
@@ -112,16 +113,51 @@ class _SemanticSearchSimplePageState extends State<SemanticSearchSimplePage>
   List<SearchResult> _generateMockResults(String query) {
     // 根据搜索模式生成不同的模拟结果
     return List.generate(8, (index) {
-      return SearchResult(
-        id: 'result_$index',
-        title: _getMockTitle(query, index),
-        content: _getMockContent(query, index),
-        source: _getMockSource(index),
-        type: _getMockType(index),
-        score: 0.95 - (index * 0.1),
-        createdAt: DateTime.now().subtract(Duration(days: index)),
-        knowledgeBaseId: widget.knowledgeBaseId,
-      );
+      final type = _getMockType(index);
+      final score = 0.95 - (index * 0.1);
+      final id = 'result_$index';
+      final title = _getMockTitle(query, index);
+      final content = _getMockContent(query, index);
+      final createdAt = DateTime.now().subtract(Duration(days: index));
+      
+      if (type == SearchResultType.document) {
+        return DocumentSearchResult(
+          id: id,
+          title: title,
+          content: content,
+          score: score,
+          knowledgeBaseId: widget.knowledgeBaseId ?? 'default_kb',
+          knowledgeBaseName: '默认知识库',
+          fileName: '$title.pdf',
+          filePath: '/documents/$title.pdf',
+          fileType: 'pdf',
+          fileSize: 1024 * (index + 1),
+          category: '技术文档',
+          tags: ['技术', 'guide', query.toLowerCase()],
+          description: content,
+          createdAt: createdAt,
+          updatedAt: createdAt,
+        );
+      } else {
+        return FaqSearchResult(
+          id: id,
+          title: title,
+          content: content,
+          score: score,
+          question: title,
+          answer: content,
+          knowledgeBaseId: widget.knowledgeBaseId,
+          knowledgeBaseName: '默认知识库',
+          category: 'FAQ',
+          tags: ['faq', query.toLowerCase()],
+          likes: index * 5,
+          dislikes: index,
+          views: index * 20,
+          status: 'active',
+          createdAt: createdAt,
+          updatedAt: createdAt,
+        );
+      }
     });
   }
 
@@ -145,24 +181,12 @@ class _SemanticSearchSimplePageState extends State<SemanticSearchSimplePage>
         '内容包含${index + 1}个核心要点和${index + 3}个实践示例...';
   }
 
-  String _getMockSource(int index) {
-    final sources = [
-      '技术文档库',
-      'API参考手册',
-      '开发指南',
-      'FAQ知识库',
-      '最佳实践集',
-      '问题解答库',
-    ];
-    return sources[index % sources.length];
-  }
-
   SearchResultType _getMockType(int index) {
     final types = [
       SearchResultType.document,
       SearchResultType.faq,
-      SearchResultType.knowledge,
-      SearchResultType.file,
+      SearchResultType.document,
+      SearchResultType.faq,
     ];
     return types[index % types.length];
   }
@@ -672,14 +696,14 @@ class _SemanticSearchSimplePageState extends State<SemanticSearchSimplePage>
                   ),
                   const SizedBox(width: 4),
                   Text(
-                    result.source,
+                    _getResultSource(result),
                     style: AppTextStyles.bodySmall.copyWith(
                       color: AppColors.onSurfaceVariant,
                     ),
                   ),
                   const Spacer(),
                   Text(
-                    _formatDate(result.createdAt),
+                    _formatDate(result.createdAt ?? DateTime.now()),
                     style: AppTextStyles.bodySmall.copyWith(
                       color: AppColors.onSurfaceVariant,
                     ),
@@ -693,16 +717,23 @@ class _SemanticSearchSimplePageState extends State<SemanticSearchSimplePage>
     );
   }
 
+  String _getResultSource(SearchResult result) {
+    if (result is DocumentSearchResult) {
+      return result.knowledgeBaseName ?? '技术文档库';
+    } else if (result is FaqSearchResult) {
+      return result.knowledgeBaseName ?? 'FAQ知识库';
+    }
+    return '知识库';
+  }
+
   IconData _getTypeIcon(SearchResultType type) {
     switch (type) {
       case SearchResultType.document:
         return Icons.description;
       case SearchResultType.faq:
         return Icons.quiz;
-      case SearchResultType.knowledge:
+      case SearchResultType.mixed:
         return Icons.library_books;
-      case SearchResultType.file:
-        return Icons.attach_file;
     }
   }
 
@@ -712,10 +743,8 @@ class _SemanticSearchSimplePageState extends State<SemanticSearchSimplePage>
         return AppColors.primary;
       case SearchResultType.faq:
         return AppColors.secondary;
-      case SearchResultType.knowledge:
+      case SearchResultType.mixed:
         return AppColors.tertiary;
-      case SearchResultType.file:
-        return AppColors.warning;
     }
   }
 
@@ -780,33 +809,4 @@ enum SearchMode {
   semantic,  // 语义搜索
   keyword,   // 关键词搜索
   hybrid,    // 混合搜索
-}
-
-enum SearchResultType {
-  document,   // 文档
-  faq,        // FAQ
-  knowledge,  // 知识库
-  file,       // 文件
-}
-
-class SearchResult {
-  final String id;
-  final String title;
-  final String content;
-  final String source;
-  final SearchResultType type;
-  final double score;
-  final DateTime createdAt;
-  final String? knowledgeBaseId;
-
-  SearchResult({
-    required this.id,
-    required this.title,
-    required this.content,
-    required this.source,
-    required this.type,
-    required this.score,
-    required this.createdAt,
-    this.knowledgeBaseId,
-  });
 }

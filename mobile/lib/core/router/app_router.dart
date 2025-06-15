@@ -4,12 +4,15 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../features/auth/presentation/blocs/auth_bloc.dart';
 import '../../features/auth/presentation/blocs/auth_state.dart';
+import '../../features/knowledge/presentation/bloc/knowledge_base_bloc.dart';
+import '../di/service_locator.dart';
 import '../../features/auth/presentation/pages/login_page.dart';
 import '../../features/auth/presentation/pages/register_page.dart';
 import '../../features/auth/presentation/pages/forgot_password_page.dart';
 import '../../features/home/presentation/pages/home_page.dart';
 import '../../features/knowledge/presentation/pages/knowledge_base_page.dart';
 import '../../features/knowledge/presentation/pages/knowledge_base_form_page.dart';
+import '../../features/knowledge/presentation/pages/knowledge_base_detail_page.dart';
 import '../../features/files/presentation/pages/file_management_page.dart';
 import '../../features/faq/presentation/pages/faq_management_simple.dart';
 import '../../features/faq/presentation/pages/faq_detail_page.dart';
@@ -149,14 +152,20 @@ class AppRouter {
                 name: 'knowledge-base-detail',
                 builder: (context, state) {
                   final id = state.pathParameters['id']!;
-                  return KnowledgeBaseDetailPage(knowledgeBaseId: id);
+                  return BlocProvider(
+                    create: (context) => sl<KnowledgeBaseBloc>(),
+                    child: KnowledgeBaseDetailPage(knowledgeBaseId: id),
+                  );
                 },
               ),
               // 创建/编辑知识库
               GoRoute(
                 path: '/new',
                 name: 'knowledge-base-new',
-                builder: (context, state) => const KnowledgeBaseFormPage(),
+                builder: (context, state) => BlocProvider(
+                  create: (context) => sl<KnowledgeBaseBloc>(),
+                  child: const KnowledgeBaseFormPage(),
+                ),
               ),
               GoRoute(
                 path: '/edit/:id',
@@ -164,7 +173,12 @@ class AppRouter {
                 builder: (context, state) {
                   final id = state.pathParameters['id']!;
                   // 这里需要根据id获取知识库对象，暂时用默认参数
-                  return const KnowledgeBaseFormPage(isEditing: true);
+                  return BlocProvider(
+                    create: (context) => sl<KnowledgeBaseBloc>(),
+                    child: const KnowledgeBaseFormPage(
+                      isEditing: true,
+                    ),
+                  );
                 },
               ),
             ],
@@ -411,27 +425,7 @@ class AppRouter {
   }
 }
 
-/// 知识库详情页面（临时实现）
-class KnowledgeBaseDetailPage extends StatelessWidget {
-  final String knowledgeBaseId;
 
-  const KnowledgeBaseDetailPage({
-    super.key,
-    required this.knowledgeBaseId,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('知识库详情 $knowledgeBaseId'),
-      ),
-      body: Center(
-        child: Text('知识库详情页面 - ID: $knowledgeBaseId'),
-      ),
-    );
-  }
-}
 
 /// 聊天详情页面（临时实现）
 class ChatDetailPage extends StatelessWidget {

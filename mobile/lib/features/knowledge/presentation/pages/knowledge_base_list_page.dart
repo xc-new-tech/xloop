@@ -4,14 +4,16 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/logger_utils.dart';
-import '../../../../shared/presentation/widgets/loading_widget.dart';
-import '../../../../shared/presentation/widgets/error_widget.dart';
-import '../../../../shared/presentation/widgets/empty_state_widget.dart';
+import '../../../../features/shared/presentation/widgets/loading_widget.dart';
+import '../../../../features/shared/presentation/widgets/error_widget.dart';
+import '../../../../features/shared/presentation/widgets/empty_state_widget.dart';
 import '../../domain/entities/knowledge_base.dart';
 import '../bloc/knowledge_base_bloc.dart';
+import '../bloc/knowledge_base_event.dart';
+import '../bloc/knowledge_base_state.dart';
 import '../widgets/knowledge_base_card.dart';
 import '../widgets/knowledge_base_filter_bottom_sheet.dart';
-import '../widgets/knowledge_base_search_delegate.dart';
+// import '../widgets/knowledge_base_search_delegate.dart'; // TODO: 实现搜索委托
 
 class KnowledgeBaseListPage extends StatefulWidget {
   const KnowledgeBaseListPage({super.key});
@@ -77,18 +79,13 @@ class _KnowledgeBaseListPageState extends State<KnowledgeBaseListPage>
           type: _selectedType,
           status: _selectedStatus,
           tags: _selectedTags.isEmpty ? null : _selectedTags,
-          sort: _currentSort,
-          order: _currentOrder,
           page: 1,
         ));
         break;
       case 1: // 我的
         bloc.add(GetMyKnowledgeBasesEvent(
-          search: _searchController.text.isEmpty ? null : _searchController.text,
           status: _selectedStatus,
-          tags: _selectedTags.isEmpty ? null : _selectedTags,
-          sort: _currentSort,
-          order: _currentOrder,
+          type: _selectedType,
           page: 1,
         ));
         break;
@@ -96,8 +93,6 @@ class _KnowledgeBaseListPageState extends State<KnowledgeBaseListPage>
         bloc.add(GetPublicKnowledgeBasesEvent(
           search: _searchController.text.isEmpty ? null : _searchController.text,
           tags: _selectedTags.isEmpty ? null : _selectedTags,
-          sort: _currentSort,
-          order: _currentOrder,
           page: 1,
         ));
         break;
@@ -108,7 +103,7 @@ class _KnowledgeBaseListPageState extends State<KnowledgeBaseListPage>
     final bloc = context.read<KnowledgeBaseBloc>();
     final state = bloc.state;
     
-    if (state is KnowledgeBaseLoaded && state.hasMoreData) {
+    if (state is KnowledgeBaseListLoaded && state.hasMore) {
       switch (_tabController.index) {
         case 0: // 全部
           bloc.add(GetKnowledgeBasesEvent(
@@ -116,18 +111,13 @@ class _KnowledgeBaseListPageState extends State<KnowledgeBaseListPage>
             type: _selectedType,
             status: _selectedStatus,
             tags: _selectedTags.isEmpty ? null : _selectedTags,
-            sort: _currentSort,
-            order: _currentOrder,
             page: state.currentPage + 1,
           ));
           break;
         case 1: // 我的
           bloc.add(GetMyKnowledgeBasesEvent(
-            search: _searchController.text.isEmpty ? null : _searchController.text,
             status: _selectedStatus,
-            tags: _selectedTags.isEmpty ? null : _selectedTags,
-            sort: _currentSort,
-            order: _currentOrder,
+            type: _selectedType,
             page: state.currentPage + 1,
           ));
           break;
@@ -135,8 +125,6 @@ class _KnowledgeBaseListPageState extends State<KnowledgeBaseListPage>
           bloc.add(GetPublicKnowledgeBasesEvent(
             search: _searchController.text.isEmpty ? null : _searchController.text,
             tags: _selectedTags.isEmpty ? null : _selectedTags,
-            sort: _currentSort,
-            order: _currentOrder,
             page: state.currentPage + 1,
           ));
           break;
@@ -170,19 +158,40 @@ class _KnowledgeBaseListPageState extends State<KnowledgeBaseListPage>
   }
 
   void _showSearch() {
-    showSearch(
+    // TODO: 实现搜索功能
+    showDialog(
       context: context,
-      delegate: KnowledgeBaseSearchDelegate(
-        onSearchChanged: (query) {
-          _searchController.text = query;
-          _loadData();
-        },
+      builder: (context) => AlertDialog(
+        title: const Text('搜索'),
+        content: TextField(
+          controller: _searchController,
+          decoration: const InputDecoration(
+            hintText: '输入搜索关键词',
+          ),
+          onSubmitted: (value) {
+            Navigator.of(context).pop();
+            _loadData();
+          },
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('取消'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              _loadData();
+            },
+            child: const Text('搜索'),
+          ),
+        ],
       ),
     );
   }
 
   void _createKnowledgeBase() {
-    context.push('/knowledge/create');
+    context.push('/knowledge-base/new');
   }
 
   @override
@@ -226,9 +235,9 @@ class _KnowledgeBaseListPageState extends State<KnowledgeBaseListPage>
         builder: (context, state) {
           if (state is KnowledgeBaseInitial) {
             return const Center(child: LoadingWidget());
-          } else if (state is KnowledgeBaseLoading && state.knowledgeBases.isEmpty) {
+          } else if (state is KnowledgeBaseLoading) {
             return const Center(child: LoadingWidget());
-          } else if (state is KnowledgeBaseLoaded) {
+          } else if (state is KnowledgeBaseListLoaded) {
             if (state.knowledgeBases.isEmpty) {
               return _buildEmptyState();
             }
@@ -273,15 +282,13 @@ class _KnowledgeBaseListPageState extends State<KnowledgeBaseListPage>
     }
     
     return EmptyStateWidget(
-      icon: Icons.library_books_outlined,
-      title: title,
-      description: description,
+      message: title,
       actionText: _tabController.index == 2 ? null : '创建知识库',
       onAction: _tabController.index == 2 ? null : _createKnowledgeBase,
     );
   }
 
-  Widget _buildKnowledgeBaseList(KnowledgeBaseLoaded state) {
+  Widget _buildKnowledgeBaseList(KnowledgeBaseListLoaded state) {
     return RefreshIndicator(
       onRefresh: () async {
         _loadData();
@@ -316,12 +323,12 @@ class _KnowledgeBaseListPageState extends State<KnowledgeBaseListPage>
 
   void _onKnowledgeBaseTap(KnowledgeBase knowledgeBase) {
     LoggerUtils.d('点击知识库: ${knowledgeBase.name}');
-    context.push('/knowledge/${knowledgeBase.id}');
+    context.push('/knowledge-base/${knowledgeBase.id}');
   }
 
   void _onKnowledgeBaseEdit(KnowledgeBase knowledgeBase) {
     LoggerUtils.d('编辑知识库: ${knowledgeBase.name}');
-    context.push('/knowledge/${knowledgeBase.id}/edit');
+    context.push('/knowledge-base/edit/${knowledgeBase.id}');
   }
 
   void _onKnowledgeBaseDelete(KnowledgeBase knowledgeBase) {
@@ -352,12 +359,9 @@ class _KnowledgeBaseListPageState extends State<KnowledgeBaseListPage>
 
   void _onKnowledgeBaseShare(KnowledgeBase knowledgeBase) {
     LoggerUtils.d('分享知识库: ${knowledgeBase.name}');
-    context.read<KnowledgeBaseBloc>().add(
-          ShareKnowledgeBaseEvent(knowledgeBase.id, true),
-        );
-    
+    // TODO: 实现分享功能，需要选择用户
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('知识库分享链接已复制到剪贴板')),
+      const SnackBar(content: Text('分享功能开发中')),
     );
   }
 } 

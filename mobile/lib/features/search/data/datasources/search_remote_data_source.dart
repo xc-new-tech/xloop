@@ -1,5 +1,3 @@
-import 'package:dio/dio.dart';
-
 import '../../../../core/network/api_client.dart';
 import '../../../../core/network/api_endpoints.dart';
 import '../../../../core/error/exceptions.dart';
@@ -7,7 +5,7 @@ import '../models/search_models.dart';
 
 /// 搜索远程数据源接口
 abstract class SearchRemoteDataSource {
-  /// 执行语义搜索
+  /// 执行混合搜索
   Future<HybridSearchResultsModel> search(
     String query,
     Map<String, String> queryParams,
@@ -37,15 +35,17 @@ abstract class SearchRemoteDataSource {
   Future<void> vectorizeFaq(VectorizeFaqRequest request);
 
   /// 批量向量化
-  Future<BatchVectorizeResultModel> batchVectorize(BatchVectorizeRequest request);
+  Future<BatchVectorizeResultModel> batchVectorize(
+    BatchVectorizeRequest request,
+  );
 
-  /// 获取搜索统计信息
+  /// 获取搜索统计
   Future<SearchStatsModel> getSearchStats();
 
   /// 清理缓存
   Future<void> clearCache([String? pattern]);
 
-  /// 检查健康状态
+  /// 健康检查
   Future<Map<String, dynamic>> checkHealth();
 }
 
@@ -66,21 +66,19 @@ class SearchRemoteDataSourceImpl implements SearchRemoteDataSource {
       final params = {...queryParams, 'q': query};
       
       final response = await _apiClient.get(
-        ApiEndpoints.search,
+        '${ApiEndpoints.search}/hybrid',
         queryParameters: params,
       );
 
-      if (response.statusCode == 200 && response.data['success'] == true) {
-        return HybridSearchResultsModel.fromApiJson(response.data, query);
+      if (response['success'] == true) {
+        return HybridSearchResultsModel.fromApiJson(response, query);
       } else {
         throw ServerException(
-          response.data['message'] ?? '搜索失败',
-          response.statusCode,
+          response['message'] ?? '搜索失败',
         );
       }
-    } on DioException catch (e) {
-      throw _handleDioException(e, '搜索请求失败');
     } catch (e) {
+      if (e is ServerException) rethrow;
       throw ServerException('搜索过程中发生未知错误: $e');
     }
   }
@@ -98,20 +96,18 @@ class SearchRemoteDataSourceImpl implements SearchRemoteDataSource {
         queryParameters: params,
       );
 
-      if (response.statusCode == 200 && response.data['success'] == true) {
-        final List<dynamic> documentsData = response.data['data'] ?? [];
+      if (response['success'] == true) {
+        final List<dynamic> documentsData = response['data'] ?? [];
         return documentsData
             .map((doc) => DocumentSearchResultModel.fromApiJson(doc))
             .toList();
       } else {
         throw ServerException(
-          response.data['message'] ?? '文档搜索失败',
-          response.statusCode,
+          response['message'] ?? '文档搜索失败',
         );
       }
-    } on DioException catch (e) {
-      throw _handleDioException(e, '文档搜索请求失败');
     } catch (e) {
+      if (e is ServerException) rethrow;
       throw ServerException('文档搜索过程中发生未知错误: $e');
     }
   }
@@ -129,20 +125,18 @@ class SearchRemoteDataSourceImpl implements SearchRemoteDataSource {
         queryParameters: params,
       );
 
-      if (response.statusCode == 200 && response.data['success'] == true) {
-        final List<dynamic> faqsData = response.data['data'] ?? [];
+      if (response['success'] == true) {
+        final List<dynamic> faqsData = response['data'] ?? [];
         return faqsData
             .map((faq) => FaqSearchResultModel.fromApiJson(faq))
             .toList();
       } else {
         throw ServerException(
-          response.data['message'] ?? 'FAQ搜索失败',
-          response.statusCode,
+          response['message'] ?? 'FAQ搜索失败',
         );
       }
-    } on DioException catch (e) {
-      throw _handleDioException(e, 'FAQ搜索请求失败');
     } catch (e) {
+      if (e is ServerException) rethrow;
       throw ServerException('FAQ搜索过程中发生未知错误: $e');
     }
   }
@@ -157,20 +151,18 @@ class SearchRemoteDataSourceImpl implements SearchRemoteDataSource {
         queryParameters: queryParams,
       );
 
-      if (response.statusCode == 200 && response.data['success'] == true) {
+      if (response['success'] == true) {
         return HybridSearchResultsModel.fromApiJson(
-          response.data,
+          response,
           'recommendations',
         );
       } else {
         throw ServerException(
-          response.data['message'] ?? '推荐内容获取失败',
-          response.statusCode,
+          response['message'] ?? '推荐内容获取失败',
         );
       }
-    } on DioException catch (e) {
-      throw _handleDioException(e, '推荐内容请求失败');
     } catch (e) {
+      if (e is ServerException) rethrow;
       throw ServerException('推荐内容获取过程中发生未知错误: $e');
     }
   }
@@ -180,18 +172,16 @@ class SearchRemoteDataSourceImpl implements SearchRemoteDataSource {
     try {
       final response = await _apiClient.post(
         '${ApiEndpoints.search}/vectorize/document',
-        data: request.toJson(),
+        body: request.toJson(),
       );
 
-      if (response.statusCode != 200 || response.data['success'] != true) {
+      if (response['success'] != true) {
         throw ServerException(
-          response.data['message'] ?? '文档向量化失败',
-          response.statusCode,
+          response['message'] ?? '文档向量化失败',
         );
       }
-    } on DioException catch (e) {
-      throw _handleDioException(e, '文档向量化请求失败');
     } catch (e) {
+      if (e is ServerException) rethrow;
       throw ServerException('文档向量化过程中发生未知错误: $e');
     }
   }
@@ -201,18 +191,16 @@ class SearchRemoteDataSourceImpl implements SearchRemoteDataSource {
     try {
       final response = await _apiClient.post(
         '${ApiEndpoints.search}/vectorize/faq',
-        data: request.toJson(),
+        body: request.toJson(),
       );
 
-      if (response.statusCode != 200 || response.data['success'] != true) {
+      if (response['success'] != true) {
         throw ServerException(
-          response.data['message'] ?? 'FAQ向量化失败',
-          response.statusCode,
+          response['message'] ?? 'FAQ向量化失败',
         );
       }
-    } on DioException catch (e) {
-      throw _handleDioException(e, 'FAQ向量化请求失败');
     } catch (e) {
+      if (e is ServerException) rethrow;
       throw ServerException('FAQ向量化过程中发生未知错误: $e');
     }
   }
@@ -224,20 +212,18 @@ class SearchRemoteDataSourceImpl implements SearchRemoteDataSource {
     try {
       final response = await _apiClient.post(
         '${ApiEndpoints.search}/vectorize/batch',
-        data: request.toJson(),
+        body: request.toJson(),
       );
 
-      if (response.statusCode == 200 && response.data['success'] == true) {
-        return BatchVectorizeResultModel.fromApiJson(response.data);
+      if (response['success'] == true) {
+        return BatchVectorizeResultModel.fromApiJson(response);
       } else {
         throw ServerException(
-          response.data['message'] ?? '批量向量化失败',
-          response.statusCode,
+          response['message'] ?? '批量向量化失败',
         );
       }
-    } on DioException catch (e) {
-      throw _handleDioException(e, '批量向量化请求失败');
     } catch (e) {
+      if (e is ServerException) rethrow;
       throw ServerException('批量向量化过程中发生未知错误: $e');
     }
   }
@@ -249,17 +235,15 @@ class SearchRemoteDataSourceImpl implements SearchRemoteDataSource {
         '${ApiEndpoints.search}/stats',
       );
 
-      if (response.statusCode == 200 && response.data['success'] == true) {
-        return SearchStatsModel.fromApiJson(response.data);
+      if (response['success'] == true) {
+        return SearchStatsModel.fromApiJson(response);
       } else {
         throw ServerException(
-          response.data['message'] ?? '获取搜索统计失败',
-          response.statusCode,
+          response['message'] ?? '获取搜索统计失败',
         );
       }
-    } on DioException catch (e) {
-      throw _handleDioException(e, '搜索统计请求失败');
     } catch (e) {
+      if (e is ServerException) rethrow;
       throw ServerException('获取搜索统计过程中发生未知错误: $e');
     }
   }
@@ -267,22 +251,23 @@ class SearchRemoteDataSourceImpl implements SearchRemoteDataSource {
   @override
   Future<void> clearCache([String? pattern]) async {
     try {
-      final request = ClearCacheRequest(pattern: pattern);
-      
+      final Map<String, dynamic> body = {};
+      if (pattern != null) {
+        body['pattern'] = pattern;
+      }
+
       final response = await _apiClient.post(
         '${ApiEndpoints.search}/cache/clear',
-        data: request.toJson(),
+        body: body,
       );
 
-      if (response.statusCode != 200 || response.data['success'] != true) {
+      if (response['success'] != true) {
         throw ServerException(
-          response.data['message'] ?? '清理缓存失败',
-          response.statusCode,
+          response['message'] ?? '清理缓存失败',
         );
       }
-    } on DioException catch (e) {
-      throw _handleDioException(e, '清理缓存请求失败');
     } catch (e) {
+      if (e is ServerException) rethrow;
       throw ServerException('清理缓存过程中发生未知错误: $e');
     }
   }
@@ -294,59 +279,16 @@ class SearchRemoteDataSourceImpl implements SearchRemoteDataSource {
         '${ApiEndpoints.search}/health',
       );
 
-      if (response.statusCode == 200) {
-        return response.data as Map<String, dynamic>;
+      if (response['success'] == true) {
+        return response['data'] ?? response;
       } else {
         throw ServerException(
-          '健康检查失败',
-          response.statusCode,
+          response['message'] ?? '健康检查失败',
         );
       }
-    } on DioException catch (e) {
-      throw _handleDioException(e, '健康检查请求失败');
     } catch (e) {
+      if (e is ServerException) rethrow;
       throw ServerException('健康检查过程中发生未知错误: $e');
-    }
-  }
-
-  /// 处理Dio异常
-  ServerException _handleDioException(DioException e, String defaultMessage) {
-    switch (e.type) {
-      case DioExceptionType.connectionTimeout:
-      case DioExceptionType.sendTimeout:
-      case DioExceptionType.receiveTimeout:
-        return ServerException(
-          '网络请求超时，请检查网络连接',
-          408,
-        );
-      case DioExceptionType.badResponse:
-        final statusCode = e.response?.statusCode ?? 500;
-        final message = e.response?.data?['message'] ?? defaultMessage;
-        return ServerException(
-          message,
-          statusCode,
-        );
-      case DioExceptionType.cancel:
-        return ServerException(
-          '请求已取消',
-          499,
-        );
-      case DioExceptionType.connectionError:
-        return ServerException(
-          '网络连接错误，请检查网络设置',
-          503,
-        );
-      case DioExceptionType.badCertificate:
-        return ServerException(
-          'SSL证书验证失败',
-          495,
-        );
-      case DioExceptionType.unknown:
-      default:
-        return ServerException(
-          '$defaultMessage: ${e.message}',
-          500,
-        );
     }
   }
 } 

@@ -155,7 +155,6 @@ class KnowledgeBaseRepositoryImpl implements KnowledgeBaseRepository {
           if (coverImage != null) 'coverImage': coverImage,
           'type': type.name,
           if (settings != null) 'settings': settings,
-          'isPublic': isPublic,
           if (tags != null) 'tags': tags,
         };
         
@@ -190,7 +189,6 @@ class KnowledgeBaseRepositoryImpl implements KnowledgeBaseRepository {
         if (coverImage != null) data['coverImage'] = coverImage;
         if (type != null) data['type'] = type.name;
         if (settings != null) data['settings'] = settings;
-        if (isPublic != null) data['isPublic'] = isPublic;
         if (tags != null) data['tags'] = tags;
         
         final knowledgeBase = await remoteDataSource.updateKnowledgeBase(id, data);
