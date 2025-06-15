@@ -500,7 +500,7 @@ class _KnowledgeBasePageContentState extends State<_KnowledgeBasePageContent> {
   }
 
   void _createKnowledgeBase() {
-    _showKnowledgeBaseDialog();
+    context.push('/knowledge-base-wizard');
   }
 
   void _editKnowledgeBase(dynamic knowledgeBase) {

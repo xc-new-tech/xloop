@@ -13,6 +13,7 @@ import '../../features/home/presentation/pages/home_page.dart';
 import '../../features/knowledge/presentation/pages/knowledge_base_page.dart';
 import '../../features/knowledge/presentation/pages/knowledge_base_form_page.dart';
 import '../../features/knowledge/presentation/pages/knowledge_base_detail_page.dart';
+import '../../features/knowledge/presentation/pages/knowledge_base_wizard_page.dart';
 import '../../features/files/presentation/pages/file_management_page.dart';
 import '../../features/faq/presentation/pages/faq_management_simple.dart';
 import '../../features/faq/presentation/pages/faq_detail_page.dart';
@@ -31,6 +32,8 @@ import '../../features/workflow/presentation/pages/workflow_management_page.dart
 import '../../features/dashboard/presentation/pages/dashboard_page.dart';
 import '../../shared/presentation/pages/splash_page.dart';
 import '../../shared/presentation/pages/not_found_page.dart';
+import '../../features/onboarding/presentation/pages/welcome_page.dart';
+import '../../features/onboarding/presentation/pages/onboarding_page.dart';
 
 /// 应用路由配置类
 class AppRouter {
@@ -38,11 +41,14 @@ class AppRouter {
 
   /// 路由路径常量
   static const String splash = '/';
+  static const String welcome = '/welcome';
+  static const String onboarding = '/onboarding';
   static const String login = '/login';
   static const String register = '/register';
   static const String forgotPassword = '/forgot-password';
   static const String home = '/home';
   static const String knowledgeBase = '/knowledge-base';
+  static const String knowledgeBaseWizard = '/knowledge-base-wizard';
   static const String knowledgeBaseDetail = '/knowledge-base/:id';
   static const String files = '/files';
   static const String faq = '/faq';
@@ -103,6 +109,20 @@ class AppRouter {
         builder: (context, state) => const SplashPage(),
       ),
       
+      // 欢迎页面
+      GoRoute(
+        path: welcome,
+        name: 'welcome',
+        builder: (context, state) => const WelcomePage(),
+      ),
+      
+      // 用户引导页面
+      GoRoute(
+        path: onboarding,
+        name: 'onboarding',
+        builder: (context, state) => const OnboardingPage(),
+      ),
+      
       // 认证相关路由
       GoRoute(
         path: login,
@@ -138,6 +158,16 @@ class AppRouter {
             path: home,
             name: 'home',
             builder: (context, state) => const HomePage(),
+          ),
+          
+          // 知识库创建向导
+          GoRoute(
+            path: knowledgeBaseWizard,
+            name: 'knowledge-base-wizard',
+            builder: (context, state) => BlocProvider(
+              create: (context) => sl<KnowledgeBaseBloc>(),
+              child: const KnowledgeBaseWizardPage(),
+            ),
           ),
           
           // 知识库
