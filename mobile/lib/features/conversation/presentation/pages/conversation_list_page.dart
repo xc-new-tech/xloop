@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
 
+import '../../../../core/di/service_locator.dart';
 import '../../../shared/presentation/widgets/error_widget.dart';
 import '../../../../core/widgets/loading_widget.dart';
 import '../../../shared/presentation/widgets/empty_state_widget.dart';
+import '../../../knowledge/presentation/bloc/knowledge_base_bloc.dart';
 import '../../domain/entities/conversation.dart';
 import '../bloc/conversation_bloc.dart';
 import '../bloc/conversation_event.dart';
@@ -119,8 +121,11 @@ class _ConversationListPageState extends State<ConversationListPage> {
   void _createNewConversation() {
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (context) => CreateConversationPage(
-          initialKnowledgeBaseId: widget.knowledgeBaseId,
+        builder: (context) => BlocProvider(
+          create: (context) => sl<KnowledgeBaseBloc>(),
+          child: CreateConversationPage(
+            initialKnowledgeBaseId: widget.knowledgeBaseId,
+          ),
         ),
       ),
     );
@@ -316,7 +321,6 @@ class _ConversationListPageState extends State<ConversationListPage> {
                           return ConversationCard(
                             conversation: conversation,
                             isSelected: isSelected,
-                            isSelectionMode: state.isSelectionMode,
                             onTap: () {
                               if (state.isSelectionMode) {
                                 _conversationBloc.add(
@@ -332,25 +336,26 @@ class _ConversationListPageState extends State<ConversationListPage> {
                                 );
                               }
                             },
-                            onLongPress: () {
-                              if (!state.isSelectionMode) {
-                                _conversationBloc.add(
-                                  SelectConversationEvent(
-                                    id: conversation.id,
-                                    selected: true,
-                                  ),
-                                );
-                              }
+                            onSelectionChanged: (selected) {
+                              _conversationBloc.add(
+                                SelectConversationEvent(
+                                  id: conversation.id,
+                                  selected: selected,
+                                ),
+                              );
                             },
                             onDelete: () {
                               _conversationBloc.add(
                                 DeleteConversationEvent(id: conversation.id),
                               );
                             },
-                            onEdit: () {
-                              Navigator.of(context).pushNamed(
-                                '/conversation/edit',
-                                arguments: conversation.id,
+                            onTitleEdit: (newTitle) {
+                              // TODO: 实现标题编辑功能
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text('标题已更新为: $newTitle'),
+                                  duration: const Duration(seconds: 2),
+                                ),
                               );
                             },
                           );

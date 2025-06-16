@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:dotted_border/dotted_border.dart';
@@ -7,7 +6,7 @@ import '../../../../core/theme/app_text_styles.dart';
 
 /// 简化的文件上传组件
 class FileUploadWidget extends StatefulWidget {
-  final Function(List<File>)? onFilesSelected;
+  final Function(List<PlatformFile>)? onFilesSelected;
   final List<String>? allowedExtensions;
   final int? maxFiles;
   final double? maxSizeInMB;
@@ -29,7 +28,7 @@ class FileUploadWidget extends StatefulWidget {
 }
 
 class _FileUploadWidgetState extends State<FileUploadWidget> {
-  List<File> _selectedFiles = [];
+  List<PlatformFile> _selectedFiles = [];
 
   @override
   Widget build(BuildContext context) {
@@ -131,9 +130,9 @@ class _FileUploadWidgetState extends State<FileUploadWidget> {
   }
 
   /// 构建文件项
-  Widget _buildFileItem(File file, int index) {
-    final fileName = file.path.split('/').last;
-    final fileSize = file.lengthSync();
+  Widget _buildFileItem(PlatformFile file, int index) {
+    final fileName = file.name;
+    final fileSize = file.size;
     final fileSizeText = _formatFileSize(fileSize);
 
     return Container(
@@ -211,10 +210,7 @@ class _FileUploadWidgetState extends State<FileUploadWidget> {
       );
 
       if (result != null) {
-        final files = result.paths
-            .where((path) => path != null)
-            .map((path) => File(path!))
-            .toList();
+        final files = result.files;
 
         if (_validateFiles(files)) {
           setState(() {
@@ -238,13 +234,13 @@ class _FileUploadWidgetState extends State<FileUploadWidget> {
   }
 
   /// 验证文件
-  bool _validateFiles(List<File> files) {
+  bool _validateFiles(List<PlatformFile> files) {
     for (final file in files) {
       // 检查文件大小
       if (widget.maxSizeInMB != null) {
-        final sizeInMB = file.lengthSync() / (1024 * 1024);
+        final sizeInMB = file.size / (1024 * 1024);
         if (sizeInMB > widget.maxSizeInMB!) {
-          _showErrorMessage('文件 ${file.path.split('/').last} 超过大小限制');
+          _showErrorMessage('文件 ${file.name} 超过大小限制');
           return false;
         }
       }

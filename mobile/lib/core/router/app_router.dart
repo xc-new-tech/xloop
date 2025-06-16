@@ -24,12 +24,18 @@ import '../../features/search/presentation/pages/semantic_search_simple.dart';
 import '../../features/profile/presentation/pages/profile_page.dart';
 import '../../features/profile/presentation/pages/settings_page.dart';
 import '../../features/analytics/presentation/pages/analytics_dashboard_page.dart';
+import '../../features/analytics/presentation/pages/tuning_data_table_page.dart';
+import '../../features/notification/presentation/pages/email_notification_page.dart';
+import '../../features/user_journey/presentation/pages/user_journey_page.dart';
+import '../../features/mobile_optimization/presentation/pages/mobile_optimization_demo_page.dart';
 import '../../features/permissions/presentation/pages/permission_management_page.dart';
 import '../../features/data/presentation/pages/data_management_page.dart';
 import '../../features/api/presentation/pages/api_management_page.dart';
 import '../../features/performance/presentation/pages/performance_monitoring_page.dart';
 import '../../features/workflow/presentation/pages/workflow_management_page.dart';
 import '../../features/dashboard/presentation/pages/dashboard_page.dart';
+import '../../features/data_import_export/presentation/pages/data_import_export_page.dart';
+import '../../features/system_monitoring/presentation/pages/system_monitoring_page.dart';
 import '../../shared/presentation/pages/splash_page.dart';
 import '../../shared/presentation/pages/not_found_page.dart';
 import '../../features/onboarding/presentation/pages/welcome_page.dart';
@@ -64,6 +70,11 @@ class AppRouter {
   static const String performance = '/performance';
   static const String workflow = '/workflow';
   static const String dashboard = '/dashboard';
+  static const String emailNotification = '/email-notification';
+  static const String userJourney = '/user-journey';
+  static const String mobileOptimization = '/mobile-optimization';
+  static const String dataImportExport = '/data-import-export';
+  static const String systemMonitoring = '/system-monitoring';
 
   /// 路由配置
   static final GoRouter router = GoRouter(
@@ -327,6 +338,14 @@ class AppRouter {
             path: analytics,
             name: 'analytics',
             builder: (context, state) => const AnalyticsDashboardPage(),
+            routes: [
+              // 调优数据表格
+              GoRoute(
+                path: 'tuning-data-table',
+                name: 'tuning-data-table',
+                builder: (context, state) => const TuningDataTablePage(),
+              ),
+            ],
           ),
           
           // 权限管理
@@ -369,6 +388,41 @@ class AppRouter {
             path: dashboard,
             name: 'dashboard',
             builder: (context, state) => const DashboardPage(),
+          ),
+          
+          // 邮件通知系统
+          GoRoute(
+            path: emailNotification,
+            name: 'email-notification',
+            builder: (context, state) => const EmailNotificationPage(),
+          ),
+          
+          // 用户旅程
+          GoRoute(
+            path: userJourney,
+            name: 'user-journey',
+            builder: (context, state) => const UserJourneyPage(),
+          ),
+          
+          // 移动端优化演示
+          GoRoute(
+            path: '/mobile-optimization',
+            name: 'mobile-optimization',
+            builder: (context, state) => const MobileOptimizationDemoPage(),
+          ),
+          
+          // 数据导入导出
+          GoRoute(
+            path: dataImportExport,
+            name: 'data-import-export',
+            builder: (context, state) => const DataImportExportPage(),
+          ),
+          
+          // 系统监控
+          GoRoute(
+            path: systemMonitoring,
+            name: 'system-monitoring',
+            builder: (context, state) => const SystemMonitoringPage(),
           ),
         ],
       ),

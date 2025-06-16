@@ -328,6 +328,7 @@ class KnowledgeBaseBloc extends Bloc<KnowledgeBaseEvent, KnowledgeBaseState> {
         description: event.description,
         coverImage: event.coverImage,
         type: event.type,
+        contentType: event.contentType,
         settings: event.settings,
         isPublic: event.isPublic,
         tags: event.tags,

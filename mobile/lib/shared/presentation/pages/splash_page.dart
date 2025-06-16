@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../features/auth/presentation/blocs/auth_bloc.dart';
 import '../../../features/auth/presentation/blocs/auth_event.dart';
 import '../../../features/auth/presentation/blocs/auth_state.dart';
+import '../../../features/onboarding/presentation/bloc/onboarding_bloc.dart';
 import '../../../core/router/app_router.dart';
 
 
@@ -73,16 +74,38 @@ class _SplashPageState extends State<SplashPage>
 
   @override
   Widget build(BuildContext context) {
-    return BlocListener<AuthBloc, AuthState>(
-      listener: (context, state) {
-        if (state is AuthAuthenticated) {
-          // 用户已认证，跳转到首页
-          context.go(AppRouter.home);
-        } else if (state is AuthUnauthenticated) {
-          // 用户未认证，跳转到登录页
-          context.go(AppRouter.login);
-        }
-      },
+    return MultiBlocListener(
+      listeners: [
+        BlocListener<AuthBloc, AuthState>(
+          listener: (context, state) {
+            if (state is AuthAuthenticated) {
+              // 用户已认证，检查是否需要显示欢迎页面
+              context.read<OnboardingBloc>().add(
+                const LoadOnboardingProgress(userId: 'current_user'), // TODO: 获取实际用户ID
+              );
+            } else if (state is AuthUnauthenticated) {
+              // 用户未认证，跳转到登录页
+              context.go(AppRouter.login);
+            }
+          },
+        ),
+        BlocListener<OnboardingBloc, OnboardingState>(
+          listener: (context, state) {
+            if (state is OnboardingLoaded) {
+              if (!state.progress.isCompleted) {
+                // 首次用户，显示欢迎页面
+                context.go(AppRouter.welcome);
+              } else {
+                // 已完成引导，直接进入主页
+                context.go(AppRouter.home);
+              }
+            } else if (state is OnboardingError) {
+              // 如果获取引导状态失败，默认显示欢迎页面
+              context.go(AppRouter.welcome);
+            }
+          },
+        ),
+      ],
       child: Scaffold(
         backgroundColor: Theme.of(context).colorScheme.primary,
         body: Center(

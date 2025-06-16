@@ -1,0 +1,1 @@
+import 'package:flutter/material.dart'; class LogsWidget extends StatelessWidget { const LogsWidget({super.key}); @override Widget build(BuildContext context) { return const Center(child: Text('系统日志')); } }

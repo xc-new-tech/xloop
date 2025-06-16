@@ -222,6 +222,7 @@ class _KnowledgeBaseFormPageState extends State<KnowledgeBaseFormPage> {
             name: formData['name'],
             description: formData['description'] ?? '',
             type: _getKnowledgeBaseType(formData['type']),
+            contentType: KnowledgeBaseContentType.basicDocument, // 默认为基础文档型
           ),
         );
       }

@@ -1,0 +1,363 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:get_it/get_it.dart';
+import '../../domain/entities/operation_task_entity.dart';
+import '../bloc/system_monitoring_bloc.dart';
+import '../bloc/system_monitoring_event.dart';
+import '../bloc/system_monitoring_state.dart';
+import '../widgets/metrics_dashboard_widget.dart';
+import '../widgets/alerts_widget.dart';
+import '../widgets/logs_widget.dart';
+import '../widgets/operation_tasks_widget.dart';
+
+/// 系统监控主页面
+class SystemMonitoringPage extends StatelessWidget {
+  const SystemMonitoringPage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocProvider(
+      create: (context) => GetIt.instance<SystemMonitoringBloc>()
+        ..add(const LoadSystemMetricsEvent())
+        ..add(const LoadSystemHealthEvent())
+        ..add(const LoadSystemAlertsEvent())
+        ..add(const LoadSystemLogsEvent())
+        ..add(const LoadOperationTasksEvent()),
+      child: const SystemMonitoringView(),
+    );
+  }
+}
+
+class SystemMonitoringView extends StatefulWidget {
+  const SystemMonitoringView({super.key});
+
+  @override
+  State<SystemMonitoringView> createState() => _SystemMonitoringViewState();
+}
+
+class _SystemMonitoringViewState extends State<SystemMonitoringView>
+    with TickerProviderStateMixin {
+  late TabController _tabController;
+  bool _isRealTimeMonitoring = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 4, vsync: this);
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('系统监控'),
+        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+        actions: [
+          BlocBuilder<SystemMonitoringBloc, SystemMonitoringState>(
+            builder: (context, state) {
+              final isMonitoring = state is SystemMonitoringLoaded &&
+                  state.isRealTimeMonitoring;
+              
+              return IconButton(
+                icon: Icon(
+                  isMonitoring ? Icons.stop : Icons.play_arrow,
+                  color: isMonitoring ? Colors.red : Colors.green,
+                ),
+                onPressed: () {
+                  if (isMonitoring) {
+                    context.read<SystemMonitoringBloc>()
+                        .add(const StopRealTimeMonitoringEvent());
+                  } else {
+                    context.read<SystemMonitoringBloc>()
+                        .add(const StartRealTimeMonitoringEvent());
+                  }
+                },
+                tooltip: isMonitoring ? '停止实时监控' : '开始实时监控',
+              );
+            },
+          ),
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: () {
+              context.read<SystemMonitoringBloc>()
+                  .add(const RefreshAllDataEvent());
+            },
+            tooltip: '刷新数据',
+          ),
+        ],
+        bottom: TabBar(
+          controller: _tabController,
+          tabs: const [
+            Tab(icon: Icon(Icons.dashboard), text: '仪表板'),
+            Tab(icon: Icon(Icons.warning), text: '警报'),
+            Tab(icon: Icon(Icons.list_alt), text: '日志'),
+            Tab(icon: Icon(Icons.task), text: '运维任务'),
+          ],
+        ),
+      ),
+      body: BlocBuilder<SystemMonitoringBloc, SystemMonitoringState>(
+        builder: (context, state) {
+          if (state is SystemMonitoringLoading) {
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const CircularProgressIndicator(),
+                  const SizedBox(height: 16),
+                  Text(state.message),
+                ],
+              ),
+            );
+          }
+
+          if (state is SystemMonitoringError) {
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.error_outline,
+                    size: 64,
+                    color: Theme.of(context).colorScheme.error,
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    state.message,
+                    style: Theme.of(context).textTheme.headlineSmall,
+                    textAlign: TextAlign.center,
+                  ),
+                  if (state.details != null) ...[
+                    const SizedBox(height: 8),
+                    Text(
+                      state.details!,
+                      style: Theme.of(context).textTheme.bodyMedium,
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                  const SizedBox(height: 24),
+                  ElevatedButton(
+                    onPressed: () {
+                      context.read<SystemMonitoringBloc>()
+                          .add(const RefreshAllDataEvent());
+                    },
+                    child: const Text('重试'),
+                  ),
+                ],
+              ),
+            );
+          }
+
+          return TabBarView(
+            controller: _tabController,
+            children: [
+              // 仪表板
+              const MetricsDashboardWidget(),
+              // 警报
+              const AlertsWidget(),
+              // 日志
+              const LogsWidget(),
+              // 运维任务
+              const OperationTasksWidget(),
+            ],
+          );
+        },
+      ),
+      floatingActionButton: _buildFloatingActionButton(context),
+    );
+  }
+
+  Widget? _buildFloatingActionButton(BuildContext context) {
+    return BlocBuilder<SystemMonitoringBloc, SystemMonitoringState>(
+      builder: (context, state) {
+        if (_tabController.index == 3) { // 运维任务页面
+          return FloatingActionButton(
+            onPressed: () => _showCreateTaskDialog(context),
+            tooltip: '创建运维任务',
+            child: const Icon(Icons.add),
+          );
+        }
+        return null;
+      },
+    );
+  }
+
+  void _showCreateTaskDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => const CreateOperationTaskDialog(),
+    );
+  }
+}
+
+/// 创建运维任务对话框
+class CreateOperationTaskDialog extends StatefulWidget {
+  const CreateOperationTaskDialog({super.key});
+
+  @override
+  State<CreateOperationTaskDialog> createState() =>
+      _CreateOperationTaskDialogState();
+}
+
+class _CreateOperationTaskDialogState extends State<CreateOperationTaskDialog> {
+  final _formKey = GlobalKey<FormState>();
+  final _titleController = TextEditingController();
+  final _descriptionController = TextEditingController();
+  
+  OperationTaskType _selectedType = OperationTaskType.maintenance;
+  DateTime? _scheduledAt;
+
+  @override
+  void dispose() {
+    _titleController.dispose();
+    _descriptionController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('创建运维任务'),
+      content: Form(
+        key: _formKey,
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextFormField(
+                controller: _titleController,
+                decoration: const InputDecoration(
+                  labelText: '任务标题',
+                  border: OutlineInputBorder(),
+                ),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return '请输入任务标题';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: _descriptionController,
+                decoration: const InputDecoration(
+                  labelText: '任务描述',
+                  border: OutlineInputBorder(),
+                ),
+                maxLines: 3,
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return '请输入任务描述';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 16),
+              DropdownButtonFormField<OperationTaskType>(
+                value: _selectedType,
+                decoration: const InputDecoration(
+                  labelText: '任务类型',
+                  border: OutlineInputBorder(),
+                ),
+                items: OperationTaskType.values.map((type) {
+                  return DropdownMenuItem(
+                    value: type,
+                    child: Text(_getTaskTypeDisplayName(type)),
+                  );
+                }).toList(),
+                onChanged: (value) {
+                  if (value != null) {
+                    setState(() {
+                      _selectedType = value;
+                    });
+                  }
+                },
+              ),
+              const SizedBox(height: 16),
+              ListTile(
+                title: const Text('计划执行时间'),
+                subtitle: Text(
+                  _scheduledAt?.toString() ?? '立即执行',
+                ),
+                trailing: const Icon(Icons.calendar_today),
+                onTap: () async {
+                  final date = await showDatePicker(
+                    context: context,
+                    initialDate: DateTime.now(),
+                    firstDate: DateTime.now(),
+                    lastDate: DateTime.now().add(const Duration(days: 365)),
+                  );
+                  
+                  if (date != null) {
+                    final time = await showTimePicker(
+                      context: context,
+                      initialTime: TimeOfDay.now(),
+                    );
+                    
+                    if (time != null) {
+                      setState(() {
+                        _scheduledAt = DateTime(
+                          date.year,
+                          date.month,
+                          date.day,
+                          time.hour,
+                          time.minute,
+                        );
+                      });
+                    }
+                  }
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('取消'),
+        ),
+        ElevatedButton(
+          onPressed: () {
+            if (_formKey.currentState!.validate()) {
+              context.read<SystemMonitoringBloc>().add(
+                CreateOperationTaskEvent(
+                  title: _titleController.text,
+                  description: _descriptionController.text,
+                  type: _selectedType,
+                  scheduledAt: _scheduledAt,
+                ),
+              );
+              Navigator.of(context).pop();
+            }
+          },
+          child: const Text('创建'),
+        ),
+      ],
+    );
+  }
+
+  String _getTaskTypeDisplayName(OperationTaskType type) {
+    switch (type) {
+      case OperationTaskType.backup:
+        return '备份';
+      case OperationTaskType.cleanup:
+        return '清理';
+      case OperationTaskType.optimization:
+        return '优化';
+      case OperationTaskType.maintenance:
+        return '维护';
+      case OperationTaskType.deployment:
+        return '部署';
+      case OperationTaskType.monitoring:
+        return '监控';
+      case OperationTaskType.security:
+        return '安全';
+    }
+  }
+} 

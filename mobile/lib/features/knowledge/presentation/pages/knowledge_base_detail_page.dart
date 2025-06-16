@@ -9,6 +9,10 @@ import '../../domain/entities/knowledge_base.dart';
 import '../bloc/knowledge_base_bloc.dart';
 import '../bloc/knowledge_base_event.dart';
 import '../bloc/knowledge_base_state.dart';
+// 导入三个专用页面
+import 'knowledge_base_type_pages/product_manual_page.dart';
+import 'knowledge_base_type_pages/faq_management_page.dart';
+import 'knowledge_base_type_pages/basic_document_page.dart';
 
 class KnowledgeBaseDetailPage extends StatefulWidget {
   final String knowledgeBaseId;
@@ -147,7 +151,7 @@ class _KnowledgeBaseDetailPageState extends State<KnowledgeBaseDetailPage>
           Row(
             children: [
               Icon(
-                knowledgeBase.type.icon,
+                knowledgeBase.contentType.icon,
                 color: Colors.white,
                 size: 32,
               ),
@@ -157,7 +161,7 @@ class _KnowledgeBaseDetailPageState extends State<KnowledgeBaseDetailPage>
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      knowledgeBase.type.displayName,
+                      knowledgeBase.contentType.displayName,
                       style: const TextStyle(
                         color: Colors.white70,
                         fontSize: 14,
@@ -218,6 +222,20 @@ class _KnowledgeBaseDetailPageState extends State<KnowledgeBaseDetailPage>
   }
 
   Widget _buildDetailContent(KnowledgeBase knowledgeBase) {
+    // 根据内容类型确定第二个Tab的名称
+    String contentTabName;
+    switch (knowledgeBase.contentType) {
+      case KnowledgeBaseContentType.productManual:
+        contentTabName = '产品管理';
+        break;
+      case KnowledgeBaseContentType.faqSupport:
+        contentTabName = 'FAQ管理';
+        break;
+      case KnowledgeBaseContentType.basicDocument:
+        contentTabName = '文档管理';
+        break;
+    }
+
     return Column(
       children: [
         Container(
@@ -227,11 +245,11 @@ class _KnowledgeBaseDetailPageState extends State<KnowledgeBaseDetailPage>
             labelColor: AppColors.primary,
             unselectedLabelColor: Colors.grey,
             indicatorColor: AppColors.primary,
-            tabs: const [
-              Tab(text: '概览'),
-              Tab(text: '文档'),
-              Tab(text: '设置'),
-              Tab(text: '统计'),
+            tabs: [
+              const Tab(text: '概览'),
+              Tab(text: contentTabName),
+              const Tab(text: '设置'),
+              const Tab(text: '统计'),
             ],
           ),
         ),
@@ -240,7 +258,7 @@ class _KnowledgeBaseDetailPageState extends State<KnowledgeBaseDetailPage>
             controller: _tabController,
             children: [
               _buildOverviewTab(knowledgeBase),
-              _buildDocumentsTab(knowledgeBase),
+              _buildContentTab(knowledgeBase),
               _buildSettingsTab(knowledgeBase),
               _buildStatsTab(knowledgeBase),
             ],
@@ -259,7 +277,8 @@ class _KnowledgeBaseDetailPageState extends State<KnowledgeBaseDetailPage>
           _buildInfoCard('基本信息', [
             _buildInfoRow('名称', knowledgeBase.name),
             _buildInfoRow('描述', knowledgeBase.description ?? '暂无描述'),
-            _buildInfoRow('类型', knowledgeBase.type.displayName),
+            _buildInfoRow('内容类型', knowledgeBase.contentType.displayName),
+            _buildInfoRow('权限类型', knowledgeBase.type.displayName),
             _buildInfoRow('状态', knowledgeBase.status.displayName),
             _buildInfoRow('创建者', knowledgeBase.ownerName),
             _buildInfoRow('创建时间', knowledgeBase.formattedCreatedAt),
@@ -296,45 +315,16 @@ class _KnowledgeBaseDetailPageState extends State<KnowledgeBaseDetailPage>
     );
   }
 
-  Widget _buildDocumentsTab(KnowledgeBase knowledgeBase) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      child: Column(
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: TextField(
-                  decoration: InputDecoration(
-                    hintText: '搜索文档...',
-                    prefixIcon: const Icon(Icons.search),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 12),
-              ElevatedButton.icon(
-                onPressed: () => _showUploadDialog(),
-                icon: const Icon(Icons.upload_file),
-                label: const Text('上传'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
-                  foregroundColor: Colors.white,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 20),
-          Expanded(
-            child: knowledgeBase.documentCount > 0
-                ? _buildDocumentsList()
-                : _buildEmptyDocuments(),
-          ),
-        ],
-      ),
-    );
+  /// 根据内容类型显示对应的专用界面
+  Widget _buildContentTab(KnowledgeBase knowledgeBase) {
+    switch (knowledgeBase.contentType) {
+      case KnowledgeBaseContentType.productManual:
+        return ProductManualPage(knowledgeBase: knowledgeBase);
+      case KnowledgeBaseContentType.faqSupport:
+        return FaqManagementPage(knowledgeBase: knowledgeBase);
+      case KnowledgeBaseContentType.basicDocument:
+        return BasicDocumentPage(knowledgeBase: knowledgeBase);
+    }
   }
 
   Widget _buildSettingsTab(KnowledgeBase knowledgeBase) {

@@ -1,6 +1,74 @@
 import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
 
+/// 知识库内容类型枚举
+enum KnowledgeBaseContentType {
+  productManual,  // 产品手册型
+  faqSupport,     // FAQ问题答复型
+  basicDocument,  // 基础文档型
+}
+
+/// 知识库内容类型扩展
+extension KnowledgeBaseContentTypeExtension on KnowledgeBaseContentType {
+  String get displayName {
+    switch (this) {
+      case KnowledgeBaseContentType.productManual:
+        return '产品手册型';
+      case KnowledgeBaseContentType.faqSupport:
+        return 'FAQ问题答复型';
+      case KnowledgeBaseContentType.basicDocument:
+        return '基础文档型';
+    }
+  }
+
+  String get value {
+    switch (this) {
+      case KnowledgeBaseContentType.productManual:
+        return 'product_manual';
+      case KnowledgeBaseContentType.faqSupport:
+        return 'faq_support';
+      case KnowledgeBaseContentType.basicDocument:
+        return 'basic_document';
+    }
+  }
+
+  String get description {
+    switch (this) {
+      case KnowledgeBaseContentType.productManual:
+        return '适用于产品说明书、操作手册、技术文档等结构化内容';
+      case KnowledgeBaseContentType.faqSupport:
+        return '适用于常见问题解答、客服支持、问题库等问答形式内容';
+      case KnowledgeBaseContentType.basicDocument:
+        return '适用于通用文档、报告、资料等各类文档内容';
+    }
+  }
+
+  IconData get icon {
+    switch (this) {
+      case KnowledgeBaseContentType.productManual:
+        return Icons.inventory_2_outlined;
+      case KnowledgeBaseContentType.faqSupport:
+        return Icons.quiz_outlined;
+      case KnowledgeBaseContentType.basicDocument:
+        return Icons.folder_outlined;
+    }
+  }
+
+  /// 从字符串值创建内容类型
+  static KnowledgeBaseContentType fromValue(String value) {
+    switch (value) {
+      case 'product_manual':
+        return KnowledgeBaseContentType.productManual;
+      case 'faq_support':
+        return KnowledgeBaseContentType.faqSupport;
+      case 'basic_document':
+        return KnowledgeBaseContentType.basicDocument;
+      default:
+        return KnowledgeBaseContentType.basicDocument;
+    }
+  }
+}
+
 /// 知识库实体
 class KnowledgeBase extends Equatable {
   final String id;
@@ -8,6 +76,7 @@ class KnowledgeBase extends Equatable {
   final String? description;
   final String? ownerId;
   final KnowledgeBaseType type;
+  final KnowledgeBaseContentType contentType;
   final KnowledgeBaseStatus status;
   final Map<String, dynamic>? settings;
   final List<String> tags;
@@ -29,6 +98,7 @@ class KnowledgeBase extends Equatable {
     this.description,
     this.ownerId,
     required this.type,
+    required this.contentType,
     required this.status,
     this.settings,
     this.tags = const [],
@@ -52,6 +122,7 @@ class KnowledgeBase extends Equatable {
         description,
         ownerId,
         type,
+        contentType,
         status,
         settings,
         tags,
@@ -75,6 +146,7 @@ class KnowledgeBase extends Equatable {
     String? description,
     String? ownerId,
     KnowledgeBaseType? type,
+    KnowledgeBaseContentType? contentType,
     KnowledgeBaseStatus? status,
     Map<String, dynamic>? settings,
     List<String>? tags,
@@ -96,6 +168,7 @@ class KnowledgeBase extends Equatable {
       description: description ?? this.description,
       ownerId: ownerId ?? this.ownerId,
       type: type ?? this.type,
+      contentType: contentType ?? this.contentType,
       status: status ?? this.status,
       settings: settings ?? this.settings,
       tags: tags ?? this.tags,
@@ -130,6 +203,15 @@ class KnowledgeBase extends Equatable {
 
   /// 检查是否为公开知识库
   bool get isPublic => type == KnowledgeBaseType.public;
+
+  /// 检查是否为产品手册型
+  bool get isProductManual => contentType == KnowledgeBaseContentType.productManual;
+
+  /// 检查是否为FAQ型
+  bool get isFaqSupport => contentType == KnowledgeBaseContentType.faqSupport;
+
+  /// 检查是否为基础文档型
+  bool get isBasicDocument => contentType == KnowledgeBaseContentType.basicDocument;
 
   /// 获取格式化的大小
   String get formattedSize {

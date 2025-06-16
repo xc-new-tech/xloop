@@ -13,6 +13,8 @@ KnowledgeBaseModel _$KnowledgeBaseModelFromJson(Map<String, dynamic> json) =>
       description: json['description'] as String?,
       ownerId: json['ownerId'] as String?,
       type: $enumDecode(_$KnowledgeBaseTypeEnumMap, json['type']),
+      contentType:
+          $enumDecode(_$KnowledgeBaseContentTypeEnumMap, json['contentType']),
       status: $enumDecode(_$KnowledgeBaseStatusEnumMap, json['status']),
       settings: json['settings'] as Map<String, dynamic>?,
       tags:
@@ -40,6 +42,7 @@ Map<String, dynamic> _$KnowledgeBaseModelToJson(KnowledgeBaseModel instance) =>
       'description': instance.description,
       'ownerId': instance.ownerId,
       'type': _$KnowledgeBaseTypeEnumMap[instance.type]!,
+      'contentType': _$KnowledgeBaseContentTypeEnumMap[instance.contentType]!,
       'status': _$KnowledgeBaseStatusEnumMap[instance.status]!,
       'settings': instance.settings,
       'tags': instance.tags,
@@ -62,6 +65,12 @@ const _$KnowledgeBaseTypeEnumMap = {
   KnowledgeBaseType.public: 'public',
 };
 
+const _$KnowledgeBaseContentTypeEnumMap = {
+  KnowledgeBaseContentType.productManual: 'productManual',
+  KnowledgeBaseContentType.faqSupport: 'faqSupport',
+  KnowledgeBaseContentType.basicDocument: 'basicDocument',
+};
+
 const _$KnowledgeBaseStatusEnumMap = {
   KnowledgeBaseStatus.active: 'active',
   KnowledgeBaseStatus.archived: 'archived',
@@ -75,6 +84,7 @@ CreateKnowledgeBaseRequest _$CreateKnowledgeBaseRequestFromJson(
       description: json['description'] as String?,
       coverImage: json['cover_image'] as String?,
       type: json['type'] as String,
+      contentType: json['content_type'] as String,
       settings: json['settings'] as Map<String, dynamic>?,
       isPublic: json['is_public'] as bool? ?? false,
       tags: (json['tags'] as List<dynamic>?)?.map((e) => e as String).toList(),
@@ -87,6 +97,7 @@ Map<String, dynamic> _$CreateKnowledgeBaseRequestToJson(
       'description': instance.description,
       'cover_image': instance.coverImage,
       'type': instance.type,
+      'content_type': instance.contentType,
       'settings': instance.settings,
       'is_public': instance.isPublic,
       'tags': instance.tags,

@@ -23,6 +23,7 @@ abstract class KnowledgeBaseRepository {
     String? description,
     String? coverImage,
     required KnowledgeBaseType type,
+    required KnowledgeBaseContentType contentType, // 新增内容类型参数
     Map<String, dynamic>? settings,
     bool isPublic = false,
     List<String>? tags,

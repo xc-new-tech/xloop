@@ -12,6 +12,7 @@ class KnowledgeBaseModel extends KnowledgeBase {
     super.description,
     super.ownerId,
     required super.type,
+    required super.contentType, // 新增内容类型
     required super.status,
     super.settings,
     super.tags,
@@ -35,6 +36,7 @@ class KnowledgeBaseModel extends KnowledgeBase {
       description: json['description'] as String?,
       ownerId: json['owner_id'] as String? ?? json['ownerId'] as String? ?? 'unknown',
       type: _parseKnowledgeBaseType(json['type'] as String),
+      contentType: _parseKnowledgeBaseContentType(json['contentType'] as String? ?? json['content_type'] as String? ?? 'basic_document'),
       status: _parseKnowledgeBaseStatus(json['status'] as String),
       settings: json['settings'] as Map<String, dynamic>?,
       tags: (json['tags'] as List<dynamic>?)?.map((e) => e as String).toList() ?? [],
@@ -80,6 +82,19 @@ class KnowledgeBaseModel extends KnowledgeBase {
     }
   }
 
+  static KnowledgeBaseContentType _parseKnowledgeBaseContentType(String contentType) {
+    switch (contentType.toLowerCase()) {
+      case 'product_manual':
+        return KnowledgeBaseContentType.productManual;
+      case 'faq_support':
+        return KnowledgeBaseContentType.faqSupport;
+      case 'basic_document':
+        return KnowledgeBaseContentType.basicDocument;
+      default:
+        return KnowledgeBaseContentType.basicDocument;
+    }
+  }
+
   static int _parseIntFromDynamic(dynamic value) {
     if (value is int) return value;
     if (value is String) return int.tryParse(value) ?? 0;
@@ -97,6 +112,7 @@ class KnowledgeBaseModel extends KnowledgeBase {
       description: entity.description,
       ownerId: entity.ownerId,
       type: entity.type,
+      contentType: entity.contentType,
       status: entity.status,
       settings: entity.settings,
       tags: entity.tags,
@@ -121,6 +137,7 @@ class KnowledgeBaseModel extends KnowledgeBase {
         description: description,
         ownerId: ownerId,
         type: type,
+        contentType: contentType,
         status: status,
         settings: settings,
         tags: tags,
@@ -144,6 +161,7 @@ class KnowledgeBaseModel extends KnowledgeBase {
     String? description,
     String? ownerId,
     KnowledgeBaseType? type,
+    KnowledgeBaseContentType? contentType,
     KnowledgeBaseStatus? status,
     Map<String, dynamic>? settings,
     List<String>? tags,
@@ -165,6 +183,7 @@ class KnowledgeBaseModel extends KnowledgeBase {
       description: description ?? this.description,
       ownerId: ownerId ?? this.ownerId,
       type: type ?? this.type,
+      contentType: contentType ?? this.contentType,
       status: status ?? this.status,
       settings: settings ?? this.settings,
       tags: tags ?? this.tags,
@@ -191,6 +210,8 @@ class CreateKnowledgeBaseRequest {
   @JsonKey(name: 'cover_image')
   final String? coverImage;
   final String type;
+  @JsonKey(name: 'content_type')
+  final String contentType; // 新增内容类型字段
   final Map<String, dynamic>? settings;
   @JsonKey(name: 'is_public')
   final bool isPublic;
@@ -201,6 +222,7 @@ class CreateKnowledgeBaseRequest {
     this.description,
     this.coverImage,
     required this.type,
+    required this.contentType, // 新增必需参数
     this.settings,
     this.isPublic = false,
     this.tags,

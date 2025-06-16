@@ -100,6 +100,7 @@ class CreateKnowledgeBaseEvent extends KnowledgeBaseEvent {
   final String? description;
   final String? coverImage;
   final KnowledgeBaseType type;
+  final KnowledgeBaseContentType contentType; // 新增内容类型
   final Map<String, dynamic>? settings;
   final bool isPublic;
   final List<String>? tags;
@@ -109,13 +110,14 @@ class CreateKnowledgeBaseEvent extends KnowledgeBaseEvent {
     this.description,
     this.coverImage,
     required this.type,
+    required this.contentType, // 新增必需参数
     this.settings,
     this.isPublic = false,
     this.tags,
   });
 
   @override
-  List<Object?> get props => [name, description, coverImage, type, settings, isPublic, tags];
+  List<Object?> get props => [name, description, coverImage, type, contentType, settings, isPublic, tags];
 }
 
 /// 更新知识库事件

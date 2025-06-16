@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../../core/theme/app_colors.dart';
 
@@ -18,6 +19,12 @@ class QuickActionsPanel extends StatelessWidget {
             context,
             '快速分析',
             [
+              _ActionItem(
+                icon: Icons.table_chart,
+                title: '调优数据表格',
+                subtitle: '查看和分析详细的调优数据',
+                onTap: () => _openTuningDataTable(context),
+              ),
               _ActionItem(
                 icon: Icons.analytics,
                 title: '生成质量报告',
@@ -256,6 +263,10 @@ class QuickActionsPanel extends StatelessWidget {
       const SnackBar(content: Text('正在导出数据...')),
     );
     // TODO: 实现数据导出
+  }
+
+  void _openTuningDataTable(BuildContext context) {
+    context.go('/analytics/tuning-data-table');
   }
 }
 

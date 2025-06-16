@@ -14,6 +14,8 @@ import 'core/utils/logger_utils.dart';
 import 'features/auth/presentation/blocs/auth_bloc.dart';
 import 'features/auth/presentation/blocs/auth_state.dart';
 import 'features/auth/presentation/blocs/auth_event.dart';
+import 'features/onboarding/presentation/bloc/onboarding_bloc.dart';
+import 'features/data_import_export/presentation/bloc/import_export_bloc.dart';
 import 'generated/l10n/app_localizations.dart';
 
 void main() async {
@@ -92,7 +94,15 @@ class XLoopApp extends StatelessWidget {
       providers: [
         // 认证BLoC
         BlocProvider<AuthBloc>(
-          create: (context) => sl<AuthBloc>()..add(AuthCheckRequested()),
+          create: (context) => sl<AuthBloc>()..add(const AuthCheckRequested()),
+        ),
+        // 用户引导BLoC
+        BlocProvider<OnboardingBloc>(
+          create: (context) => sl<OnboardingBloc>(),
+        ),
+        // 数据导入导出BLoC
+        BlocProvider<ImportExportBloc>(
+          create: (context) => sl<ImportExportBloc>(),
         ),
       ],
       child: ScreenUtilInit(

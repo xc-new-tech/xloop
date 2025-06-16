@@ -27,3 +27,28 @@ node_modules/
 # Task files
 tasks.json
 tasks/ 
+
+# Flutter/Dart specific
+mobile/.dart_tool/
+mobile/build/
+mobile/.flutter-plugins
+mobile/.flutter-plugins-dependencies
+mobile/.packages
+mobile/.pub-cache/
+mobile/.pub/
+mobile/ios/Flutter/flutter_export_environment.sh
+mobile/ios/Pods/
+mobile/ios/.symlinks/
+mobile/android/.gradle/
+mobile/android/app/build/
+mobile/android/build/
+mobile/android/gradle/
+mobile/android/local.properties
+mobile/android/key.properties
+mobile/web/build/
+
+# Cache and temporary files
+*.tmp
+*.cache
+*.temp
+.cache/ 

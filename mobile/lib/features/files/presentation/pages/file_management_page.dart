@@ -1,8 +1,8 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../widgets/file_upload_widget.dart';
+import 'package:file_picker/file_picker.dart';
 
 /// 文件管理页面
 class FileManagementPage extends StatefulWidget {
@@ -20,7 +20,7 @@ class FileManagementPage extends StatefulWidget {
 class _FileManagementPageState extends State<FileManagementPage>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
-  List<File> _selectedFiles = [];
+  List<PlatformFile> _selectedFiles = [];
   List<FileItem> _uploadedFiles = [];
   bool _isUploading = false;
   double _uploadProgress = 0.0;
@@ -392,7 +392,7 @@ class _FileManagementPageState extends State<FileManagementPage>
   }
 
   /// 文件选择回调
-  void _onFilesSelected(List<File> files) {
+  void _onFilesSelected(List<PlatformFile> files) {
     setState(() {
       _selectedFiles = files;
     });
@@ -422,15 +422,16 @@ class _FileManagementPageState extends State<FileManagementPage>
         // 添加到已上传文件列表
         _uploadedFiles.add(FileItem(
           id: DateTime.now().millisecondsSinceEpoch.toString(),
-          name: file.path.split('/').last,
-          extension: file.path.split('.').last.toLowerCase(),
-          size: _formatFileSize(file.lengthSync()),
+          name: file.name,
+          extension: (file.extension ?? '').toLowerCase(),
+          size: _formatFileSize(file.size),
           uploadDate: _formatDate(DateTime.now()),
           description: null,
         ));
       }
 
       // 上传完成
+      final uploadedCount = _selectedFiles.length;
       setState(() {
         _isUploading = false;
         _uploadProgress = 0.0;
@@ -441,7 +442,7 @@ class _FileManagementPageState extends State<FileManagementPage>
       _tabController.animateTo(1);
 
       // 显示成功消息
-      _showSuccessMessage('成功上传 ${_selectedFiles.length} 个文件');
+      _showSuccessMessage('成功上传 $uploadedCount 个文件');
     } catch (e) {
       setState(() {
         _isUploading = false;
@@ -452,7 +453,7 @@ class _FileManagementPageState extends State<FileManagementPage>
   }
 
   /// 模拟上传进度
-  Future<void> _simulateUpload(File file, Function(double) onProgress) async {
+  Future<void> _simulateUpload(PlatformFile file, Function(double) onProgress) async {
     for (int i = 0; i <= 100; i += 10) {
       await Future.delayed(const Duration(milliseconds: 50));
       onProgress(i / 100);

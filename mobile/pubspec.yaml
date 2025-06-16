@@ -92,16 +92,19 @@ dependencies:
   package_info_plus: ^4.2.0  # 应用信息
   device_info_plus: ^10.1.0  # 设备信息
   url_launcher: ^6.2.5  # URL启动器
+  share_plus: ^7.2.2  # 分享功能
   
   # 国际化
   intl: ^0.20.2  # 国际化支持
   
-  # 字体
-  google_fonts: ^6.1.0  # Google字体
+  # 字体 - 使用系统默认字体
   
   # 动画效果
   animations: ^2.0.11  # Material动画组件
   lottie: ^3.1.0  # Lottie动画
+  csv: ^6.0.0
+  archive: ^4.0.7
+  fl_chart: ^1.0.0
 
 dev_dependencies:
   flutter_test:

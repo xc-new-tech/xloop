@@ -16,9 +16,19 @@ const PORT = process.env.PORT || 3002;
 // 中间件配置
 app.use(helmet());
 app.use(compression());
+
+// CORS配置 - 允许前端访问
 app.use(cors({
-  origin: process.env.CORS_ORIGIN || 'http://localhost:3000',
+  origin: [
+    'http://localhost:3000',
+    'http://127.0.0.1:3000',
+    process.env.CORS_ORIGIN
+  ].filter(Boolean),
   credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
+  exposedHeaders: ['Content-Length', 'X-Foo', 'X-Bar'],
+  maxAge: 86400 // 24小时
 }));
 
 // 速率限制

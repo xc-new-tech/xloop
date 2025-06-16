@@ -38,7 +38,7 @@ class KnowledgeBaseRemoteDataSourceImpl implements KnowledgeBaseRemoteDataSource
       if (tags != null && tags.isNotEmpty) queryParams['tags'] = tags.join(',');
 
       final response = await _dio.get(
-        '/api/v1/knowledge-bases',
+        '/api/knowledge-bases',
         queryParameters: queryParams,
       );
 
@@ -58,7 +58,7 @@ class KnowledgeBaseRemoteDataSourceImpl implements KnowledgeBaseRemoteDataSource
     try {
       _logger.d('获取知识库详情 - id: $id');
 
-      final response = await _dio.get('/api/v1/knowledge-bases/$id');
+      final response = await _dio.get('/api/knowledge-bases/$id');
 
       _logger.d('获取知识库详情成功');
       return KnowledgeBaseModel.fromJson(response.data['data']);
@@ -77,7 +77,7 @@ class KnowledgeBaseRemoteDataSourceImpl implements KnowledgeBaseRemoteDataSource
       _logger.d('创建知识库 - name: ${request.name}');
 
       final response = await _dio.post(
-        '/api/v1/knowledge-bases',
+        '/api/knowledge-bases',
         data: request.toJson(),
       );
 
@@ -98,7 +98,7 @@ class KnowledgeBaseRemoteDataSourceImpl implements KnowledgeBaseRemoteDataSource
       _logger.d('更新知识库 - id: $id');
 
       final response = await _dio.put(
-        '/api/v1/knowledge-bases/$id',
+        '/api/knowledge-bases/$id',
         data: request.toJson(),
       );
 
@@ -118,7 +118,7 @@ class KnowledgeBaseRemoteDataSourceImpl implements KnowledgeBaseRemoteDataSource
     try {
       _logger.d('删除知识库 - id: $id');
 
-      await _dio.delete('/api/v1/knowledge-bases/$id');
+      await _dio.delete('/api/knowledge-bases/$id');
 
       _logger.d('删除知识库成功');
     } on DioException catch (e) {
@@ -136,7 +136,7 @@ class KnowledgeBaseRemoteDataSourceImpl implements KnowledgeBaseRemoteDataSource
       _logger.d('更新知识库状态 - id: $id, status: $status');
 
       final response = await _dio.patch(
-        '/api/v1/knowledge-bases/$id/status',
+        '/api/knowledge-bases/$id/status',
         data: {'status': status},
       );
 
@@ -157,7 +157,7 @@ class KnowledgeBaseRemoteDataSourceImpl implements KnowledgeBaseRemoteDataSource
       _logger.d('复制知识库 - id: $id, name: $name');
 
       final response = await _dio.post(
-        '/api/v1/knowledge-bases/$id/duplicate',
+        '/api/knowledge-bases/$id/duplicate',
         data: {
           'name': name,
           if (description != null) 'description': description,
@@ -194,7 +194,7 @@ class KnowledgeBaseRemoteDataSourceImpl implements KnowledgeBaseRemoteDataSource
       if (type != null) queryParams['type'] = type;
 
       final response = await _dio.get(
-        '/api/v1/knowledge-bases/my',
+        '/api/knowledge-bases/my',
         queryParameters: queryParams,
       );
 

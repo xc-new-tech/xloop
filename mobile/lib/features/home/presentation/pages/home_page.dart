@@ -296,6 +296,16 @@ class HomePage extends StatelessWidget {
                   description: '配置系统参数',
                   onTap: () => context.go('/settings'),
                 ),
+                
+                const SizedBox(height: 12),
+                
+                _buildManagementCard(
+                  context,
+                  icon: Icons.monitor_heart,
+                  title: '系统监控',
+                  description: '查看系统状态和性能指标',
+                  onTap: () => context.go('/system-monitoring'),
+                ),
               ],
             ),
             

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
+import 'package:share_plus/share_plus.dart';
 
 import '../../../../core/widgets/loading_widget.dart';
 import '../../../shared/presentation/widgets/error_widget.dart';
@@ -30,11 +31,24 @@ class _ConversationDetailPageState extends State<ConversationDetailPage> {
   final TextEditingController _messageController = TextEditingController();
   
   Conversation? _currentConversation;
+  bool _isFavorited = false;
+  Duration? _lastResponseTime;
+  String? _selectedModel;
+  
+  // 可用的AI模型列表
+  final List<String> _availableModels = [
+    'GPT-4',
+    'GPT-3.5-turbo',
+    'Claude-3',
+    'Gemini Pro',
+    'LLaMA-2',
+  ];
 
   @override
   void initState() {
     super.initState();
     _conversationBloc = GetIt.instance<ConversationBloc>();
+    _selectedModel = _availableModels.first; // 默认选择第一个模型
     
     // 加载对话详情
     _conversationBloc.add(GetConversationEvent(id: widget.conversationId));
@@ -47,21 +61,49 @@ class _ConversationDetailPageState extends State<ConversationDetailPage> {
     super.dispose();
   }
 
-  void _sendMessage(String content, {String contentType = 'text'}) {
+  void _sendMessage(String content, {String contentType = 'text', String? modelId}) {
     if (content.trim().isEmpty) return;
 
+    final startTime = DateTime.now();
+    
     _conversationBloc.add(SendMessageEvent(
       conversationId: widget.conversationId,
       content: content.trim(),
       contentType: contentType,
+      metadata: {
+        'modelId': modelId ?? _selectedModel,
+        'timestamp': startTime.toIso8601String(),
+      },
     ));
 
     _messageController.clear();
+    
+    // 模拟响应时间计算（实际应该从API响应中获取）
+    Future.delayed(const Duration(milliseconds: 1500), () {
+      if (mounted) {
+        setState(() {
+          _lastResponseTime = DateTime.now().difference(startTime);
+        });
+      }
+    });
     
     // 滚动到底部
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _scrollToBottom();
     });
+  }
+
+  void _onModelChanged(String model) {
+    setState(() {
+      _selectedModel = model;
+    });
+    
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('已切换到 $model 模型'),
+        duration: const Duration(seconds: 1),
+      ),
+    );
   }
 
   void _scrollToBottom() {
@@ -72,6 +114,59 @@ class _ConversationDetailPageState extends State<ConversationDetailPage> {
         curve: Curves.easeOut,
       );
     }
+  }
+
+  void _toggleFavorite() {
+    setState(() {
+      _isFavorited = !_isFavorited;
+    });
+    
+    // TODO: 实现收藏功能的后端调用
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(_isFavorited ? '已添加到收藏' : '已取消收藏'),
+        duration: const Duration(seconds: 1),
+      ),
+    );
+  }
+
+  void _shareConversation() {
+    if (_currentConversation == null) return;
+    
+    final messages = _currentConversation!.messages;
+    final conversationText = messages.map((message) {
+      final role = message.role == MessageRole.user ? '用户' : 'AI';
+      return '$role: ${message.content}';
+    }).join('\n\n');
+    
+    final shareText = '''
+对话标题: ${_currentConversation!.title ?? '未命名对话'}
+创建时间: ${_currentConversation!.createdAt.toString().substring(0, 19)}
+消息数量: ${messages.length}
+
+对话内容:
+$conversationText
+
+--- 
+来自 XLoop 智能对话平台
+''';
+
+    Share.share(
+      shareText,
+      subject: '分享对话: ${_currentConversation!.title ?? '未命名对话'}',
+    );
+  }
+
+  void _exportConversation() {
+    if (_currentConversation == null) return;
+    
+    // TODO: 实现对话导出功能
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('对话导出功能开发中...'),
+        duration: Duration(seconds: 2),
+      ),
+    );
   }
 
   void _showConversationInfo() {
@@ -132,6 +227,76 @@ class _ConversationDetailPageState extends State<ConversationDetailPage> {
     _conversationBloc.add(GetConversationEvent(id: widget.conversationId));
   }
 
+  void _regenerateMessage(String messageId) {
+    // TODO: 实现重新生成消息功能
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('正在重新生成回答...'),
+        duration: Duration(seconds: 2),
+      ),
+    );
+    
+    // 模拟重新生成
+    Future.delayed(const Duration(seconds: 2), () {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('回答已重新生成'),
+            backgroundColor: Colors.green,
+          ),
+        );
+        _refreshConversation();
+      }
+    });
+  }
+
+  void _reactToMessage(String messageId, bool isLike) {
+    // TODO: 实现消息反应功能
+    final reactionType = isLike ? '点赞' : '点踩';
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('已${reactionType}该消息'),
+        duration: const Duration(seconds: 1),
+      ),
+    );
+  }
+
+  void _quoteMessage(String messageId) {
+    // 查找要引用的消息
+    final conversation = _currentConversation;
+    if (conversation == null) return;
+    
+    final message = conversation.messages.firstWhere(
+      (msg) => msg.id == messageId,
+      orElse: () => conversation.messages.first,
+    );
+    
+    // 在输入框中添加引用内容
+    final quotedText = '> ${message.content}\n\n';
+    final currentText = _messageController.text;
+    _messageController.text = quotedText + currentText;
+    _messageController.selection = TextSelection.fromPosition(
+      TextPosition(offset: _messageController.text.length),
+    );
+    
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('已引用该消息'),
+        duration: Duration(seconds: 1),
+      ),
+    );
+  }
+
+  void _editMessage(String messageId) {
+    // TODO: 实现消息编辑功能
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('消息编辑功能开发中...'),
+        duration: Duration(seconds: 2),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
@@ -149,9 +314,20 @@ class _ConversationDetailPageState extends State<ConversationDetailPage> {
                       state.conversation.title ?? '未命名对话',
                       style: const TextStyle(fontSize: 16),
                     ),
-                    Text(
-                      '${state.conversation.messageCount} 条消息',
-                      style: const TextStyle(fontSize: 12, color: Colors.grey),
+                    Row(
+                      children: [
+                        Text(
+                          '${state.conversation.messageCount} 条消息',
+                          style: const TextStyle(fontSize: 12, color: Colors.grey),
+                        ),
+                        if (_selectedModel != null) ...[
+                          const Text(' • ', style: TextStyle(fontSize: 12, color: Colors.grey)),
+                          Text(
+                            _selectedModel!,
+                            style: const TextStyle(fontSize: 12, color: Colors.grey),
+                          ),
+                        ],
+                      ],
                     ),
                   ],
                 );
@@ -161,15 +337,68 @@ class _ConversationDetailPageState extends State<ConversationDetailPage> {
           ),
           elevation: 0,
           actions: [
+            // 收藏按钮
             IconButton(
-              icon: const Icon(Icons.refresh),
-              onPressed: _refreshConversation,
-              tooltip: '刷新',
+              icon: Icon(
+                _isFavorited ? Icons.favorite : Icons.favorite_border,
+                color: _isFavorited ? Colors.red : null,
+              ),
+              onPressed: _toggleFavorite,
+              tooltip: _isFavorited ? '取消收藏' : '收藏对话',
             ),
+            // 分享按钮
             IconButton(
-              icon: const Icon(Icons.info_outline),
-              onPressed: _showConversationInfo,
-              tooltip: '对话信息',
+              icon: const Icon(Icons.share),
+              onPressed: _shareConversation,
+              tooltip: '分享对话',
+            ),
+            // 更多选项
+            PopupMenuButton<String>(
+              onSelected: (value) {
+                switch (value) {
+                  case 'refresh':
+                    _refreshConversation();
+                    break;
+                  case 'export':
+                    _exportConversation();
+                    break;
+                  case 'info':
+                    _showConversationInfo();
+                    break;
+                }
+              },
+              itemBuilder: (context) => [
+                const PopupMenuItem(
+                  value: 'refresh',
+                  child: Row(
+                    children: [
+                      Icon(Icons.refresh),
+                      SizedBox(width: 8),
+                      Text('刷新'),
+                    ],
+                  ),
+                ),
+                const PopupMenuItem(
+                  value: 'export',
+                  child: Row(
+                    children: [
+                      Icon(Icons.download),
+                      SizedBox(width: 8),
+                      Text('导出对话'),
+                    ],
+                  ),
+                ),
+                const PopupMenuItem(
+                  value: 'info',
+                  child: Row(
+                    children: [
+                      Icon(Icons.info_outline),
+                      SizedBox(width: 8),
+                      Text('对话信息'),
+                    ],
+                  ),
+                ),
+              ],
             ),
           ],
         ),
@@ -275,6 +504,10 @@ class _ConversationDetailPageState extends State<ConversationDetailPage> {
                               return MessageBubble(
                                 message: message,
                                 isUser: message.role == MessageRole.user,
+                                onRegenerate: (messageId) => _regenerateMessage(messageId),
+                                onReaction: (messageId, isLike) => _reactToMessage(messageId, isLike),
+                                onQuote: (messageId) => _quoteMessage(messageId),
+                                onEdit: (messageId) => _editMessage(messageId),
                               );
                             },
                           ),
@@ -292,7 +525,7 @@ class _ConversationDetailPageState extends State<ConversationDetailPage> {
                             child: CircularProgressIndicator(strokeWidth: 2),
                           ),
                           const SizedBox(width: 12),
-                          const Text('AI正在思考...'),
+                          Text('AI正在思考... (${_selectedModel ?? '默认模型'})'),
                         ],
                       ),
                     ),
@@ -302,6 +535,10 @@ class _ConversationDetailPageState extends State<ConversationDetailPage> {
                     controller: _messageController,
                     onSend: _sendMessage,
                     enabled: conversation.status == ConversationStatus.active,
+                    availableModels: _availableModels,
+                    selectedModel: _selectedModel,
+                    onModelChanged: _onModelChanged,
+                    lastResponseTime: _lastResponseTime,
                   ),
                 ],
               );

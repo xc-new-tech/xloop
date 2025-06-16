@@ -49,8 +49,38 @@ import '../../features/faq/presentation/bloc/faq_bloc.dart';
 // Features - Analytics
 import '../../features/analytics/presentation/bloc/analytics_bloc.dart';
 
+// Features - Onboarding
+import '../../features/onboarding/data/datasources/onboarding_local_datasource.dart';
+import '../../features/onboarding/data/datasources/onboarding_local_datasource_impl.dart';
+import '../../features/onboarding/data/repositories/onboarding_repository_impl.dart';
+import '../../features/onboarding/domain/repositories/onboarding_repository.dart';
+import '../../features/onboarding/domain/usecases/get_onboarding_progress.dart';
+import '../../features/onboarding/domain/usecases/update_onboarding_progress.dart';
+import '../../features/onboarding/domain/usecases/complete_onboarding.dart';
+import '../../features/onboarding/domain/usecases/check_first_time_user.dart';
+import '../../features/onboarding/presentation/bloc/onboarding_bloc.dart';
+
 // Features - Permissions
 import '../../features/permissions/di/permission_injection.dart' as permission_di;
+
+// Features - Data Import Export
+import '../../features/data_import_export/data/repositories/import_export_repository_impl.dart';
+import '../../features/data_import_export/data/services/file_processor_service.dart';
+import '../../features/data_import_export/data/services/csv_processor_service.dart';
+import '../../features/data_import_export/data/services/excel_processor_service.dart';
+import '../../features/data_import_export/data/services/backup_service.dart';
+import '../../features/data_import_export/domain/repositories/import_export_repository.dart';
+import '../../features/data_import_export/domain/usecases/import_export_usecases.dart';
+import '../../features/data_import_export/presentation/bloc/import_export_bloc.dart';
+
+// Features - System Monitoring
+import '../../features/system_monitoring/data/repositories/system_monitoring_repository_impl.dart';
+import '../../features/system_monitoring/domain/repositories/system_monitoring_repository.dart';
+import '../../features/system_monitoring/domain/usecases/get_system_metrics.dart';
+import '../../features/system_monitoring/domain/usecases/manage_system_alerts.dart';
+import '../../features/system_monitoring/domain/usecases/manage_operation_tasks.dart';
+import '../../features/system_monitoring/domain/usecases/manage_system_logs.dart';
+import '../../features/system_monitoring/presentation/bloc/system_monitoring_bloc.dart';
 
 // 临时BLoC实现
 import '../../features/search/presentation/bloc/search_bloc_impl.dart';
@@ -135,7 +165,7 @@ Future<void> initializeDependencies() async {
   sl.registerLazySingleton<Dio>(() {
     final dio = Dio();
     dio.options = BaseOptions(
-      baseUrl: 'http://localhost:3000', // 暂时使用3000端口，因为后端服务可能在这个端口
+      baseUrl: 'http://localhost:3002', // 核心服务运行在3002端口
       connectTimeout: const Duration(seconds: 30),
       receiveTimeout: const Duration(seconds: 30),
       sendTimeout: const Duration(seconds: 30),
@@ -219,7 +249,9 @@ Future<void> initializeDependencies() async {
   
   // 数据源
   sl.registerLazySingleton<KnowledgeBaseRemoteDataSource>(
-    () => KnowledgeBaseRemoteDataSourceImpl(sl<ApiClient>()),
+    () => KnowledgeBaseRemoteDataSourceImpl(
+      sl<ApiClient>(),
+    ),
   );
   
   // 存储库
@@ -308,6 +340,50 @@ Future<void> initializeDependencies() async {
   );
 
   // ===============================
+  // 用户引导功能
+  // ===============================
+  
+  // 数据源
+  sl.registerLazySingleton<OnboardingLocalDatasource>(
+    () => OnboardingLocalDatasourceImpl(
+      sharedPreferences: sl(),
+    ),
+  );
+  
+  // 存储库
+  sl.registerLazySingleton<OnboardingRepository>(
+    () => OnboardingRepositoryImpl(
+      localDatasource: sl(),
+    ),
+  );
+  
+  // 用例
+  sl.registerLazySingleton<GetOnboardingProgress>(
+    () => GetOnboardingProgress(sl()),
+  );
+  
+  sl.registerLazySingleton<UpdateOnboardingProgress>(
+    () => UpdateOnboardingProgress(sl()),
+  );
+  
+  sl.registerLazySingleton<CompleteOnboarding>(
+    () => CompleteOnboarding(sl()),
+  );
+  
+  sl.registerLazySingleton<CheckFirstTimeUser>(
+    () => CheckFirstTimeUser(sl()),
+  );
+  
+  // BLoC
+  sl.registerFactory<OnboardingBloc>(
+    () => OnboardingBloc(
+      getOnboardingProgress: sl(),
+      updateOnboardingProgress: sl(),
+      completeOnboarding: sl(),
+    ),
+  );
+
+  // ===============================
   // 权限管理功能
   // ===============================
   permission_di.PermissionInjection.configureDependencies();
@@ -325,6 +401,145 @@ Future<void> initializeDependencies() async {
   
   // 临时BLoC注册 - 实际使用时需要添加完整的数据源、存储库、用例等
   sl.registerFactory(() => AnalyticsBloc());
+
+  // ===============================
+  // 数据导入导出功能
+  // ===============================
+  
+  // 数据导入导出服务
+  sl.registerLazySingleton<FileProcessorService>(
+    () => FileProcessorService(),
+  );
+  
+  sl.registerLazySingleton<CsvProcessorService>(
+    () => CsvProcessorService(),
+  );
+  
+  sl.registerLazySingleton<ExcelProcessorService>(
+    () => ExcelProcessorService(),
+  );
+  
+  sl.registerLazySingleton<BackupService>(
+    () => BackupService(),
+  );
+  
+  // 数据导入导出存储库
+  sl.registerLazySingleton<ImportExportRepository>(
+    () => ImportExportRepositoryImpl(
+      fileProcessor: sl(),
+      csvProcessor: sl(),
+      excelProcessor: sl(),
+      backupService: sl(),
+    ),
+  );
+  
+  // 数据导入导出用例
+  sl.registerLazySingleton<GetImportExportTasksUseCase>(
+    () => GetImportExportTasksUseCase(sl()),
+  );
+  
+  sl.registerLazySingleton<ExportFaqsUseCase>(
+    () => ExportFaqsUseCase(sl()),
+  );
+  
+  sl.registerLazySingleton<ImportFaqsUseCase>(
+    () => ImportFaqsUseCase(sl()),
+  );
+  
+  sl.registerLazySingleton<ValidateImportFileUseCase>(
+    () => ValidateImportFileUseCase(sl()),
+  );
+  
+  sl.registerLazySingleton<ExportKnowledgeBaseUseCase>(
+    () => ExportKnowledgeBaseUseCase(sl()),
+  );
+  
+  sl.registerLazySingleton<ExportDocumentsUseCase>(
+    () => ExportDocumentsUseCase(sl()),
+  );
+  
+  sl.registerLazySingleton<ExportConversationsUseCase>(
+    () => ExportConversationsUseCase(sl()),
+  );
+  
+  sl.registerLazySingleton<CreateBackupUseCase>(
+    () => CreateBackupUseCase(sl()),
+  );
+  
+  sl.registerLazySingleton<RestoreBackupUseCase>(
+    () => RestoreBackupUseCase(sl()),
+  );
+  
+  sl.registerLazySingleton<StartTaskUseCase>(
+    () => StartTaskUseCase(sl()),
+  );
+  
+  sl.registerLazySingleton<CancelTaskUseCase>(
+    () => CancelTaskUseCase(sl()),
+  );
+  
+  sl.registerLazySingleton<DeleteTaskUseCase>(
+    () => DeleteTaskUseCase(sl()),
+  );
+  
+  sl.registerLazySingleton<ShareExportFileUseCase>(
+    () => ShareExportFileUseCase(sl()),
+  );
+  
+  // 数据导入导出BLoC
+  sl.registerFactory<ImportExportBloc>(
+    () => ImportExportBloc(
+      getTasksUseCase: sl(),
+      exportFaqsUseCase: sl(),
+      importFaqsUseCase: sl(),
+      validateFileUseCase: sl(),
+      exportKnowledgeBaseUseCase: sl(),
+      exportDocumentsUseCase: sl(),
+      exportConversationsUseCase: sl(),
+      createBackupUseCase: sl(),
+      restoreBackupUseCase: sl(),
+      startTaskUseCase: sl(),
+      cancelTaskUseCase: sl(),
+      deleteTaskUseCase: sl(),
+      shareExportFileUseCase: sl(),
+    ),
+  );
+
+  // ===============================
+  // 系统监控功能
+  // ===============================
+  
+  // 存储库
+  sl.registerLazySingleton<SystemMonitoringRepository>(
+    () => SystemMonitoringRepositoryImpl(),
+  );
+  
+  // 用例
+  sl.registerLazySingleton<GetSystemMetrics>(
+    () => GetSystemMetrics(sl()),
+  );
+  
+  sl.registerLazySingleton<ManageSystemAlerts>(
+    () => ManageSystemAlerts(sl()),
+  );
+  
+  sl.registerLazySingleton<ManageOperationTasks>(
+    () => ManageOperationTasks(sl()),
+  );
+  
+  sl.registerLazySingleton<ManageSystemLogs>(
+    () => ManageSystemLogs(sl()),
+  );
+  
+  // BLoC
+  sl.registerFactory<SystemMonitoringBloc>(
+    () => SystemMonitoringBloc(
+      getSystemMetrics: sl(),
+      manageSystemAlerts: sl(),
+      manageOperationTasks: sl(),
+      manageSystemLogs: sl(),
+    ),
+  );
 }
 
 /// 重置所有依赖（主要用于测试）

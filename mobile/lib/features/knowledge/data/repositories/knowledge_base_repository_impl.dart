@@ -143,6 +143,7 @@ class KnowledgeBaseRepositoryImpl implements KnowledgeBaseRepository {
     String? description,
     String? coverImage,
     required KnowledgeBaseType type,
+    required KnowledgeBaseContentType contentType, // 新增内容类型参数
     Map<String, dynamic>? settings,
     bool isPublic = false,
     List<String>? tags,
@@ -154,6 +155,7 @@ class KnowledgeBaseRepositoryImpl implements KnowledgeBaseRepository {
           if (description != null) 'description': description,
           if (coverImage != null) 'coverImage': coverImage,
           'type': type.name,
+          'contentType': contentType.value, // 添加内容类型到数据中
           if (settings != null) 'settings': settings,
           if (tags != null) 'tags': tags,
         };

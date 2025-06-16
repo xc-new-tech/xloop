@@ -648,6 +648,7 @@ class _KnowledgeBasePageContentState extends State<_KnowledgeBasePageContent> {
                 if (knowledgeBase == null) {
                   knowledgeBaseBloc.add(CreateKnowledgeBaseEvent(
                     type: KnowledgeBaseType.personal,
+                    contentType: KnowledgeBaseContentType.basicDocument, // 默认为基础文档型
                     name: name,
                     description: description,
                     isPublic: isPublic,

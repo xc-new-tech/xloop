@@ -1,11 +1,11 @@
 {
-    "name": "mobile",
-    "short_name": "mobile",
+    "name": "XLoop 知识智能平台",
+    "short_name": "XLoop",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "background_color": "#667eea",
+    "theme_color": "#667eea",
+    "description": "智能知识管理平台，让信息更有价值",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

@@ -20,6 +20,7 @@ class CreateKnowledgeBase implements UseCase<KnowledgeBase, CreateKnowledgeBaseP
       description: params.description,
       coverImage: params.coverImage,
       type: params.type,
+      contentType: params.contentType,
       settings: params.settings,
       isPublic: params.isPublic,
       tags: params.tags,
@@ -43,6 +44,7 @@ class CreateKnowledgeBaseParams extends Equatable {
   final String? description;
   final String? coverImage;
   final KnowledgeBaseType type;
+  final KnowledgeBaseContentType contentType; // 新增内容类型
   final Map<String, dynamic>? settings;
   final bool isPublic;
   final List<String>? tags;
@@ -52,6 +54,7 @@ class CreateKnowledgeBaseParams extends Equatable {
     this.description,
     this.coverImage,
     required this.type,
+    required this.contentType, // 新增必需参数
     this.settings,
     this.isPublic = false,
     this.tags,
@@ -63,6 +66,7 @@ class CreateKnowledgeBaseParams extends Equatable {
         description,
         coverImage,
         type,
+        contentType, // 添加到props中
         settings,
         isPublic,
         tags,

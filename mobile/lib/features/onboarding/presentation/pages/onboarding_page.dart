@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../shared/widgets/custom_button.dart';
 import '../widgets/onboarding_step_widget.dart';
+import '../bloc/onboarding_bloc.dart';
 import '../../domain/entities/onboarding_step.dart';
 
 class OnboardingPage extends StatefulWidget {
@@ -16,6 +18,15 @@ class OnboardingPage extends StatefulWidget {
 class _OnboardingPageState extends State<OnboardingPage> {
   final PageController _pageController = PageController();
   int _currentIndex = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    // 加载用户引导进度
+    context.read<OnboardingBloc>().add(
+      const LoadOnboardingProgress(userId: 'current_user'), // TODO: 获取实际用户ID
+    );
+  }
 
   final List<OnboardingStep> _steps = [
     const OnboardingStep(
@@ -61,36 +72,49 @@ class _OnboardingPageState extends State<OnboardingPage> {
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
-        child: Column(
-          children: [
-            // 顶部导航栏
-            _buildTopBar(),
-            
-            // 进度指示器
-            _buildProgressIndicator(),
-            
-            // 引导内容
-            Expanded(
-              child: PageView.builder(
-                controller: _pageController,
-                onPageChanged: (index) {
-                  setState(() {
-                    _currentIndex = index;
-                  });
-                },
-                itemCount: _steps.length,
-                itemBuilder: (context, index) {
-                  return OnboardingStepWidget(
-                    step: _steps[index],
-                    isActive: index == _currentIndex,
-                  );
-                },
+        child: BlocListener<OnboardingBloc, OnboardingState>(
+          listener: (context, state) {
+            if (state is OnboardingCompleted) {
+              _showCompletionAnimation();
+            } else if (state is OnboardingSkipped) {
+              _goToMain();
+            }
+          },
+          child: Column(
+            children: [
+              // 顶部导航栏
+              _buildTopBar(),
+              
+              // 进度指示器
+              _buildProgressIndicator(),
+              
+              // 引导内容
+              Expanded(
+                child: PageView.builder(
+                  controller: _pageController,
+                  onPageChanged: (index) {
+                    setState(() {
+                      _currentIndex = index;
+                    });
+                    // 更新当前步骤
+                    context.read<OnboardingBloc>().add(
+                      UpdateCurrentStep(stepId: _steps[index].id),
+                    );
+                  },
+                  itemCount: _steps.length,
+                  itemBuilder: (context, index) {
+                    return OnboardingStepWidget(
+                      step: _steps[index],
+                      isActive: index == _currentIndex,
+                    );
+                  },
+                ),
               ),
-            ),
-            
-            // 底部按钮
-            _buildBottomButtons(),
-          ],
+              
+              // 底部按钮
+              _buildBottomButtons(),
+            ],
+          ),
         ),
       ),
     );
@@ -247,7 +271,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
           TextButton(
             onPressed: () {
               Navigator.of(context).pop();
-              _goToMain();
+              context.read<OnboardingBloc>().add(const SkipOnboarding());
             },
             child: const Text('确定'),
           ),
@@ -257,16 +281,13 @@ class _OnboardingPageState extends State<OnboardingPage> {
   }
 
   void _completeOnboarding() {
-    // 标记引导完成
-    _markOnboardingCompleted();
+    // 标记当前步骤完成
+    context.read<OnboardingBloc>().add(
+      CompleteOnboardingStep(stepId: _steps[_currentIndex].id),
+    );
     
-    // 显示完成动画
-    _showCompletionAnimation();
-  }
-
-  void _markOnboardingCompleted() {
-    // TODO: 保存引导完成状态到本地存储或后端
-    // SharedPreferences 或 Hive 存储
+    // 完成整个引导流程
+    context.read<OnboardingBloc>().add(const CompleteOnboardingFlow());
   }
 
   void _showCompletionAnimation() {

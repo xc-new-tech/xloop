@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../../core/di/service_locator.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../conversation/domain/entities/conversation.dart';
 import '../../../conversation/presentation/bloc/conversation_bloc.dart';
@@ -10,6 +11,7 @@ import '../../../conversation/presentation/pages/create_conversation_page.dart';
 import '../../../conversation/presentation/widgets/conversation_card.dart';
 import '../../../conversation/presentation/widgets/conversation_search_bar.dart';
 import '../../../conversation/presentation/widgets/conversation_filter_dialog.dart';
+import '../../../knowledge/presentation/bloc/knowledge_base_bloc.dart';
 
 /// 聊天页面
 class ChatPage extends StatefulWidget {
@@ -284,7 +286,10 @@ class _ChatPageState extends State<ChatPage>
   void _createNewConversation() {
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (context) => const CreateConversationPage(),
+        builder: (context) => BlocProvider(
+          create: (context) => sl<KnowledgeBaseBloc>(),
+          child: const CreateConversationPage(),
+        ),
       ),
     ).then((result) {
       if (result == true) {
@@ -297,8 +302,11 @@ class _ChatPageState extends State<ChatPage>
   void _createConversationWithType(ConversationType type) {
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (context) => CreateConversationPage(
-          initialType: type,
+        builder: (context) => BlocProvider(
+          create: (context) => sl<KnowledgeBaseBloc>(),
+          child: CreateConversationPage(
+            initialType: type,
+          ),
         ),
       ),
     ).then((result) {

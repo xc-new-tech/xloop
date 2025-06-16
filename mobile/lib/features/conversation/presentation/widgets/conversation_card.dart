@@ -3,159 +3,211 @@ import 'package:intl/intl.dart';
 
 import '../../domain/entities/conversation.dart';
 
-class ConversationCard extends StatelessWidget {
+class ConversationCard extends StatefulWidget {
   final Conversation conversation;
-  final bool isSelected;
-  final bool isSelectionMode;
-  final VoidCallback onTap;
-  final VoidCallback? onLongPress;
+  final VoidCallback? onTap;
   final VoidCallback? onDelete;
-  final VoidCallback? onEdit;
-  final Function(double)? onRate;
+  final VoidCallback? onArchive;
+  final Function(int)? onRate;
+  final Function(String)? onTitleEdit;
+  final bool isSelected;
+  final Function(bool)? onSelectionChanged;
 
   const ConversationCard({
     Key? key,
     required this.conversation,
-    this.isSelected = false,
-    this.isSelectionMode = false,
-    required this.onTap,
-    this.onLongPress,
+    this.onTap,
     this.onDelete,
-    this.onEdit,
+    this.onArchive,
     this.onRate,
+    this.onTitleEdit,
+    this.isSelected = false,
+    this.onSelectionChanged,
   }) : super(key: key);
+
+  @override
+  State<ConversationCard> createState() => _ConversationCardState();
+}
+
+class _ConversationCardState extends State<ConversationCard> {
+  bool _isEditingTitle = false;
+  late TextEditingController _titleController;
+
+  @override
+  void initState() {
+    super.initState();
+    _titleController = TextEditingController(
+      text: widget.conversation.title ?? '未命名对话',
+    );
+  }
+
+  @override
+  void dispose() {
+    _titleController.dispose();
+    super.dispose();
+  }
+
+  void _startEditingTitle() {
+    setState(() {
+      _isEditingTitle = true;
+    });
+  }
+
+  void _saveTitle() {
+    final newTitle = _titleController.text.trim();
+    if (newTitle.isNotEmpty && newTitle != widget.conversation.title) {
+      widget.onTitleEdit?.call(newTitle);
+    }
+    setState(() {
+      _isEditingTitle = false;
+    });
+  }
+
+  void _cancelEditingTitle() {
+    _titleController.text = widget.conversation.title ?? '未命名对话';
+    setState(() {
+      _isEditingTitle = false;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final lastMessage = conversation.messages.isNotEmpty 
-        ? conversation.messages.last 
-        : null;
+    final lastMessage = widget.conversation.lastUserMessage ?? 
+                       widget.conversation.lastAssistantMessage;
     
     return Card(
-      margin: const EdgeInsets.only(bottom: 12),
-      elevation: isSelected ? 4 : 1,
-      color: isSelected ? theme.primaryColor.withOpacity(0.1) : null,
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      elevation: widget.isSelected ? 4 : 1,
+      color: widget.isSelected 
+          ? theme.primaryColor.withOpacity(0.1) 
+          : theme.colorScheme.surface,
       child: InkWell(
-        onTap: onTap,
-        onLongPress: onLongPress,
+        onTap: widget.onTap,
+        onLongPress: () {
+          widget.onSelectionChanged?.call(!widget.isSelected);
+        },
         borderRadius: BorderRadius.circular(12),
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // 头部信息
+              // 头部：标题、状态和选择框
               Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // 选择指示器
-                  if (isSelectionMode)
-                    Container(
-                      margin: const EdgeInsets.only(right: 12),
-                      child: Icon(
-                        isSelected 
-                            ? Icons.check_circle 
-                            : Icons.radio_button_unchecked,
-                        color: isSelected 
-                            ? theme.primaryColor 
-                            : Colors.grey,
-                      ),
+                  // 选择框
+                  if (widget.onSelectionChanged != null)
+                    Checkbox(
+                      value: widget.isSelected,
+                      onChanged: (value) {
+                        widget.onSelectionChanged?.call(value ?? false);
+                      },
+                      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                     ),
                   
                   // 对话类型图标
                   Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: _getTypeColor(conversation.type).withOpacity(0.1),
+                      color: _getTypeColor(widget.conversation.type).withOpacity(0.1),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Icon(
-                      _getTypeIcon(conversation.type),
-                      color: _getTypeColor(conversation.type),
+                      _getTypeIcon(widget.conversation.type),
                       size: 20,
+                      color: _getTypeColor(widget.conversation.type),
                     ),
                   ),
                   
                   const SizedBox(width: 12),
                   
-                  // 对话信息
+                  // 标题和状态
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // 标题和状态
-                        Row(
-                          children: [
-                            Expanded(
-                              child: Text(
-                                conversation.title ?? '未命名对话',
-                                style: theme.textTheme.titleMedium?.copyWith(
-                                  fontWeight: FontWeight.w600,
+                        // 标题编辑区域
+                        if (_isEditingTitle)
+                          Row(
+                            children: [
+                              Expanded(
+                                child: TextField(
+                                  controller: _titleController,
+                                  style: theme.textTheme.titleMedium?.copyWith(
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                  decoration: const InputDecoration(
+                                    border: OutlineInputBorder(),
+                                    contentPadding: EdgeInsets.symmetric(
+                                      horizontal: 8,
+                                      vertical: 4,
+                                    ),
+                                    isDense: true,
+                                  ),
+                                  autofocus: true,
+                                  onSubmitted: (_) => _saveTitle(),
                                 ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
                               ),
-                            ),
-                            const SizedBox(width: 8),
-                            _buildStatusChip(conversation.status, theme),
-                          ],
-                        ),
-                        
-                        const SizedBox(height: 4),
-                        
-                        // 最后一条消息
-                        if (lastMessage != null)
-                          Text(
-                            lastMessage.content,
-                            style: theme.textTheme.bodyMedium?.copyWith(
-                              color: Colors.grey[600],
-                            ),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        
-                        const SizedBox(height: 8),
-                        
-                        // 统计信息
-                        Row(
-                          children: [
-                            Icon(
-                              Icons.message_outlined,
-                              size: 16,
-                              color: Colors.grey[500],
-                            ),
-                            const SizedBox(width: 4),
-                            Text(
-                              '${conversation.messageCount}',
-                              style: theme.textTheme.bodySmall?.copyWith(
-                                color: Colors.grey[600],
-                              ),
-                            ),
-                            
-                            if (conversation.rating != null) ...[
-                              const SizedBox(width: 16),
-                              Icon(
-                                Icons.star,
-                                size: 16,
-                                color: Colors.amber,
+                              const SizedBox(width: 8),
+                              IconButton(
+                                icon: const Icon(Icons.check, color: Colors.green),
+                                onPressed: _saveTitle,
+                                iconSize: 20,
+                                padding: EdgeInsets.zero,
+                                constraints: const BoxConstraints(),
                               ),
                               const SizedBox(width: 4),
-                              Text(
-                                '${conversation.rating}',
-                                style: theme.textTheme.bodySmall?.copyWith(
-                                  color: Colors.grey[600],
+                              IconButton(
+                                icon: const Icon(Icons.close, color: Colors.red),
+                                onPressed: _cancelEditingTitle,
+                                iconSize: 20,
+                                padding: EdgeInsets.zero,
+                                constraints: const BoxConstraints(),
+                              ),
+                            ],
+                          )
+                        else
+                          Row(
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  widget.conversation.title ?? '未命名对话',
+                                  style: theme.textTheme.titleMedium?.copyWith(
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              InkWell(
+                                onTap: _startEditingTitle,
+                                borderRadius: BorderRadius.circular(4),
+                                child: Padding(
+                                  padding: const EdgeInsets.all(4),
+                                  child: Icon(
+                                    Icons.edit,
+                                    size: 16,
+                                    color: Colors.grey[600],
+                                  ),
                                 ),
                               ),
                             ],
-                            
-                            const Spacer(),
-                            
-                            // 时间
+                          ),
+                        
+                        const SizedBox(height: 4),
+                        
+                        // 状态和时间
+                        Row(
+                          children: [
+                            _buildStatusChip(widget.conversation.status, theme),
+                            const SizedBox(width: 8),
                             Text(
-                              _formatTime(conversation.lastMessageAt ?? conversation.createdAt),
+                              _formatTime(widget.conversation.lastMessageAt ?? 
+                                         widget.conversation.createdAt),
                               style: theme.textTheme.bodySmall?.copyWith(
-                                color: Colors.grey[500],
+                                color: Colors.grey[600],
                               ),
                             ),
                           ],
@@ -164,63 +216,155 @@ class ConversationCard extends StatelessWidget {
                     ),
                   ),
                   
-                  // 操作菜单
-                  if (!isSelectionMode)
-                    PopupMenuButton<String>(
-                      onSelected: (value) {
-                        switch (value) {
-                          case 'edit':
-                            onEdit?.call();
-                            break;
-                          case 'delete':
-                            _showDeleteConfirm(context);
-                            break;
-                        }
-                      },
-                      itemBuilder: (context) => [
+                  // 更多操作菜单
+                  PopupMenuButton<String>(
+                    onSelected: (value) {
+                      switch (value) {
+                        case 'edit':
+                          _startEditingTitle();
+                          break;
+                        case 'archive':
+                          widget.onArchive?.call();
+                          break;
+                        case 'delete':
+                          _showDeleteConfirm(context);
+                          break;
+                        case 'rate':
+                          _showRatingDialog(context);
+                          break;
+                      }
+                    },
+                    itemBuilder: (context) => [
+                      const PopupMenuItem(
+                        value: 'edit',
+                        child: Row(
+                          children: [
+                            Icon(Icons.edit),
+                            SizedBox(width: 8),
+                            Text('编辑标题'),
+                          ],
+                        ),
+                      ),
+                      if (widget.conversation.status != ConversationStatus.archived)
                         const PopupMenuItem(
-                          value: 'edit',
-                          child: ListTile(
-                            leading: Icon(Icons.edit),
-                            title: Text('编辑'),
-                            dense: true,
+                          value: 'archive',
+                          child: Row(
+                            children: [
+                              Icon(Icons.archive),
+                              SizedBox(width: 8),
+                              Text('归档'),
+                            ],
                           ),
                         ),
-                        const PopupMenuItem(
-                          value: 'delete',
-                          child: ListTile(
-                            leading: Icon(Icons.delete, color: Colors.red),
-                            title: Text('删除', style: TextStyle(color: Colors.red)),
-                            dense: true,
-                          ),
+                      const PopupMenuItem(
+                        value: 'rate',
+                        child: Row(
+                          children: [
+                            Icon(Icons.star),
+                            SizedBox(width: 8),
+                            Text('评分'),
+                          ],
                         ),
-                      ],
-                      child: Icon(
-                        Icons.more_vert,
+                      ),
+                      const PopupMenuItem(
+                        value: 'delete',
+                        child: Row(
+                          children: [
+                            Icon(Icons.delete, color: Colors.red),
+                            SizedBox(width: 8),
+                            Text('删除', style: TextStyle(color: Colors.red)),
+                          ],
+                        ),
+                      ),
+                    ],
+                    child: Icon(
+                      Icons.more_vert,
+                      color: Colors.grey[600],
+                    ),
+                  ),
+                ],
+              ),
+              
+              const SizedBox(height: 12),
+              
+              // 最后一条消息预览
+              if (lastMessage != null)
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.background,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color: theme.colorScheme.outline.withOpacity(0.2),
+                    ),
+                  ),
+                  child: Text(
+                    lastMessage.content,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: Colors.grey[700],
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              
+              const SizedBox(height: 12),
+              
+              // 底部统计信息
+              Row(
+                children: [
+                  // 消息数量
+                  Icon(
+                    Icons.chat_bubble_outline,
+                    size: 16,
+                    color: Colors.grey[600],
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    '${widget.conversation.messageCount}',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: Colors.grey[600],
+                    ),
+                  ),
+                  
+                  const SizedBox(width: 16),
+                  
+                  // 评分显示
+                  if (widget.conversation.rating != null) ...[
+                    Icon(
+                      Icons.star,
+                      size: 16,
+                      color: Colors.amber,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      '${widget.conversation.rating}',
+                      style: theme.textTheme.bodySmall?.copyWith(
                         color: Colors.grey[600],
+                      ),
+                    ),
+                  ],
+                  
+                  const Spacer(),
+                  
+                  // 知识库标签
+                  if (widget.conversation.knowledgeBaseId != null)
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: theme.primaryColor.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        '知识库',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.primaryColor,
+                          fontWeight: FontWeight.w500,
+                        ),
                       ),
                     ),
                 ],
               ),
-              
-              // 标签
-              if (conversation.tags.isNotEmpty) ...[
-                const SizedBox(height: 12),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 4,
-                  children: conversation.tags.take(3).map((tag) => Chip(
-                    label: Text(
-                      tag,
-                      style: theme.textTheme.bodySmall,
-                    ),
-                    backgroundColor: theme.primaryColor.withOpacity(0.1),
-                    side: BorderSide.none,
-                    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    visualDensity: VisualDensity.compact,
-                  )).toList(),
-                ),
-              ],
             ],
           ),
         ),
@@ -230,20 +374,20 @@ class ConversationCard extends StatelessWidget {
 
   Widget _buildStatusChip(ConversationStatus status, ThemeData theme) {
     Color color;
-    String text;
+    String label;
     
     switch (status) {
       case ConversationStatus.active:
         color = Colors.green;
-        text = '活跃';
+        label = '活跃';
         break;
       case ConversationStatus.ended:
-        color = Colors.blue;
-        text = '已结束';
+        color = Colors.grey;
+        label = '已结束';
         break;
       case ConversationStatus.archived:
-        color = Colors.grey;
-        text = '已归档';
+        color = Colors.orange;
+        label = '已归档';
         break;
     }
     
@@ -255,9 +399,10 @@ class ConversationCard extends StatelessWidget {
         border: Border.all(color: color.withOpacity(0.3)),
       ),
       child: Text(
-        text,
-        style: theme.textTheme.bodySmall?.copyWith(
+        label,
+        style: TextStyle(
           color: color,
+          fontSize: 12,
           fontWeight: FontWeight.w500,
         ),
       ),
@@ -321,12 +466,63 @@ class ConversationCard extends StatelessWidget {
           TextButton(
             onPressed: () {
               Navigator.of(context).pop();
-              onDelete?.call();
+              widget.onDelete?.call();
             },
             style: TextButton.styleFrom(foregroundColor: Colors.red),
             child: const Text('删除'),
           ),
         ],
+      ),
+    );
+  }
+
+  void _showRatingDialog(BuildContext context) {
+    int selectedRating = widget.conversation.rating ?? 5;
+    
+    showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          title: const Text('为对话评分'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text('请为这次对话体验评分：'),
+              const SizedBox(height: 16),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: List.generate(5, (index) {
+                  final rating = index + 1;
+                  return IconButton(
+                    onPressed: () {
+                      setState(() {
+                        selectedRating = rating;
+                      });
+                    },
+                    icon: Icon(
+                      rating <= selectedRating ? Icons.star : Icons.star_border,
+                      color: Colors.amber,
+                      size: 32,
+                    ),
+                  );
+                }),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('取消'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                widget.onRate?.call(selectedRating);
+              },
+              child: const Text('确定'),
+            ),
+          ],
+        ),
       ),
     );
   }

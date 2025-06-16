@@ -31,6 +31,22 @@ class _KnowledgeBaseWizardPageState extends State<KnowledgeBaseWizardPage> {
   String _selectedCategory = 'product_manual';
   List<String> _keywords = [];
   
+  // 预设模板
+  final Map<String, Map<String, dynamic>> _templates = {
+    'product_manual': {
+      'keywords': ['产品', '功能', '操作', '使用', '说明', '指南'],
+      'description': '本知识库主要用于存储产品功能介绍、操作指南、使用说明等内容，帮助用户快速了解产品特性和使用方法，解决使用过程中遇到的问题。',
+    },
+    'faq_support': {
+      'keywords': ['问题', '解答', '帮助', '支持', '常见', '疑问'],
+      'description': '本知识库专门收集和整理常见问题及其标准答案，为客服人员和用户提供快速、准确的问题解决方案，提高服务效率和用户满意度。',
+    },
+    'basic_document': {
+      'keywords': ['文档', '资料', '信息', '知识', '内容', '数据'],
+      'description': '本知识库用于存储各类通用文档、技术资料、业务信息等内容，建立统一的知识管理平台，方便团队成员查找和共享相关信息。',
+    },
+  };
+  
   final List<String> _categories = [
     'product_manual',
     'faq_support', 
@@ -97,6 +113,39 @@ class _KnowledgeBaseWizardPageState extends State<KnowledgeBaseWizardPage> {
       _keywords.remove(keyword);
     });
   }
+  
+  void _applyTemplate(String category) {
+    final template = _templates[category];
+    if (template != null) {
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('应用模板'),
+          content: Text('是否要应用${_categoryNames[category]}的预设模板？\n\n这将自动填充场景简介和关键词。'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('取消'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                setState(() {
+                  if (_descriptionController.text.trim().isEmpty) {
+                    _descriptionController.text = template['description'] as String;
+                  }
+                  if (_keywords.isEmpty) {
+                    _keywords = List<String>.from(template['keywords'] as List);
+                  }
+                });
+              },
+              child: const Text('应用'),
+            ),
+          ],
+        ),
+      );
+    }
+  }
 
   void _createKnowledgeBase() {
     context.read<KnowledgeBaseBloc>().add(
@@ -108,6 +157,7 @@ class _KnowledgeBaseWizardPageState extends State<KnowledgeBaseWizardPage> {
             : _selectedType == 'team' 
                 ? KnowledgeBaseType.team 
                 : KnowledgeBaseType.public,
+        contentType: KnowledgeBaseContentTypeExtension.fromValue(_selectedCategory),
         isPublic: _selectedType == 'public',
         tags: _keywords,
         settings: {
@@ -120,15 +170,24 @@ class _KnowledgeBaseWizardPageState extends State<KnowledgeBaseWizardPage> {
   bool _canProceedFromStep(int step) {
     switch (step) {
       case 0:
-        return _nameController.text.trim().isNotEmpty;
+        // 步骤1：知识库名称必填且格式正确
+        final name = _nameController.text.trim();
+        return name.isNotEmpty && name.length >= 2 && name.length <= 50;
       case 1:
-        return _descriptionController.text.trim().isNotEmpty;
+        // 步骤2：场景简介必填且不超过200字
+        final description = _descriptionController.text.trim();
+        return description.isNotEmpty && 
+               description.length >= 10 && 
+               description.length <= 200;
       case 2:
-        return true; // 类别选择总是有默认值
+        // 步骤3：类别选择总是有默认值
+        return true;
       case 3:
+        // 步骤4：至少需要添加一个关键词
         return _keywords.isNotEmpty;
       case 4:
-        return true; // 确认页面
+        // 步骤5：确认页面
+        return true;
       default:
         return false;
     }
@@ -254,7 +313,7 @@ class _KnowledgeBaseWizardPageState extends State<KnowledgeBaseWizardPage> {
           ),
           SizedBox(height: 8.h),
           Text(
-            '为您的知识库命名',
+            '创建知识库文件夹',
             style: TextStyle(
               fontSize: 24.sp,
               fontWeight: FontWeight.bold,
@@ -263,7 +322,7 @@ class _KnowledgeBaseWizardPageState extends State<KnowledgeBaseWizardPage> {
           ),
           SizedBox(height: 8.h),
           Text(
-            '请为您的知识库起一个清晰易懂的名称',
+            '为您的知识库创建一个专属的文件夹，用于存储和管理相关文档',
             style: TextStyle(
               fontSize: 16.sp,
               color: AppColors.textSecondary,
@@ -274,10 +333,72 @@ class _KnowledgeBaseWizardPageState extends State<KnowledgeBaseWizardPage> {
           CustomTextField(
             name: 'knowledge_base_name',
             controller: _nameController,
-            label: '知识库名称',
+            label: '知识库文件夹名称 *',
             hintText: '例如：产品使用手册、客服FAQ、技术文档等',
             onChanged: (value) => setState(() {}),
+            validators: [
+              (value) {
+                if (value == null || value.trim().isEmpty) {
+                  return '请输入知识库名称';
+                }
+                if (value.trim().length < 2) {
+                  return '知识库名称至少需要2个字符';
+                }
+                if (value.trim().length > 50) {
+                  return '知识库名称不能超过50个字符';
+                }
+                return null;
+              },
+            ],
           ),
+          
+          SizedBox(height: 16.h),
+          
+          // 实时校验提示
+          if (_nameController.text.isNotEmpty)
+            Container(
+              padding: EdgeInsets.all(12.w),
+              decoration: BoxDecoration(
+                color: _nameController.text.trim().length >= 2 && _nameController.text.trim().length <= 50
+                    ? Colors.green.withOpacity(0.1)
+                    : Colors.orange.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8.r),
+                border: Border.all(
+                  color: _nameController.text.trim().length >= 2 && _nameController.text.trim().length <= 50
+                      ? Colors.green.withOpacity(0.3)
+                      : Colors.orange.withOpacity(0.3),
+                ),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    _nameController.text.trim().length >= 2 && _nameController.text.trim().length <= 50
+                        ? Icons.check_circle_outline
+                        : Icons.warning_outlined,
+                    color: _nameController.text.trim().length >= 2 && _nameController.text.trim().length <= 50
+                        ? Colors.green
+                        : Colors.orange,
+                    size: 16.sp,
+                  ),
+                  SizedBox(width: 8.w),
+                  Expanded(
+                    child: Text(
+                      _nameController.text.trim().length >= 2 && _nameController.text.trim().length <= 50
+                          ? '名称格式正确'
+                          : _nameController.text.trim().length < 2
+                              ? '名称至少需要2个字符'
+                              : '名称不能超过50个字符',
+                      style: TextStyle(
+                        fontSize: 14.sp,
+                        color: _nameController.text.trim().length >= 2 && _nameController.text.trim().length <= 50
+                            ? Colors.green.shade700
+                            : Colors.orange.shade700,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
           
           SizedBox(height: 24.h),
           
@@ -291,14 +412,14 @@ class _KnowledgeBaseWizardPageState extends State<KnowledgeBaseWizardPage> {
             child: Row(
               children: [
                 Icon(
-                  Icons.lightbulb_outline,
+                  Icons.folder_outlined,
                   color: AppColors.primary,
                   size: 20.sp,
                 ),
                 SizedBox(width: 12.w),
                 Expanded(
                   child: Text(
-                    '建议使用简洁明了的名称，方便后续管理和查找',
+                    '文件夹名称将作为知识库的唯一标识，创建后不可修改，请谨慎命名',
                     style: TextStyle(
                       fontSize: 14.sp,
                       color: AppColors.primary,
@@ -314,6 +435,9 @@ class _KnowledgeBaseWizardPageState extends State<KnowledgeBaseWizardPage> {
   }
 
   Widget _buildStep2() {
+    final currentLength = _descriptionController.text.length;
+    final isOverLimit = currentLength > 200;
+    
     return Padding(
       padding: EdgeInsets.all(20.w),
       child: Column(
@@ -328,7 +452,7 @@ class _KnowledgeBaseWizardPageState extends State<KnowledgeBaseWizardPage> {
           ),
           SizedBox(height: 8.h),
           Text(
-            '描述知识库用途',
+            '填写知识库场景简介',
             style: TextStyle(
               fontSize: 24.sp,
               fontWeight: FontWeight.bold,
@@ -337,7 +461,7 @@ class _KnowledgeBaseWizardPageState extends State<KnowledgeBaseWizardPage> {
           ),
           SizedBox(height: 8.h),
           Text(
-            '简要说明这个知识库的主要用途和包含的内容类型',
+            '详细描述知识库的应用场景、主要用途和包含的内容类型，帮助系统更好地理解和组织您的知识',
             style: TextStyle(
               fontSize: 16.sp,
               color: AppColors.textSecondary,
@@ -348,14 +472,49 @@ class _KnowledgeBaseWizardPageState extends State<KnowledgeBaseWizardPage> {
           CustomTextField(
             name: 'knowledge_base_description',
             controller: _descriptionController,
-            label: '知识库描述',
-            hintText: '例如：包含产品功能介绍、操作指南、常见问题解答等内容',
-            maxLines: 4,
+            label: '知识库场景简介 *',
+            hintText: '例如：本知识库主要用于存储产品功能介绍、操作指南、常见问题解答等内容，帮助用户快速了解产品使用方法和解决常见问题...',
+            maxLines: 6,
             onChanged: (value) => setState(() {}),
+            validators: [
+              (value) {
+                if (value == null || value.trim().isEmpty) {
+                  return '请填写知识库场景简介';
+                }
+                if (value.trim().length < 10) {
+                  return '场景简介至少需要10个字符';
+                }
+                if (value.length > 200) {
+                  return '场景简介不能超过200个字符';
+                }
+                return null;
+              },
+            ],
           ),
           
-          SizedBox(height: 16.h),
+          SizedBox(height: 12.h),
           
+          // 使用模板按钮
+          Row(
+            children: [
+              Expanded(
+                child: CustomButton(
+                  text: '使用${_categoryNames[_selectedCategory]}模板',
+                  onPressed: () => _applyTemplate(_selectedCategory),
+                  isOutlined: true,
+                  icon: Icon(
+                    Icons.auto_awesome_outlined,
+                    size: 16.sp,
+                    color: AppColors.primary,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          
+          SizedBox(height: 12.h),
+          
+          // 字数统计和提示
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -367,15 +526,120 @@ class _KnowledgeBaseWizardPageState extends State<KnowledgeBaseWizardPage> {
                 ),
               ),
               Text(
-                '${_descriptionController.text.length}/200',
+                '$currentLength/200',
                 style: TextStyle(
                   fontSize: 14.sp,
-                  color: _descriptionController.text.length > 200 
+                  fontWeight: FontWeight.w600,
+                  color: isOverLimit 
                       ? AppColors.error 
-                      : AppColors.textSecondary,
+                      : currentLength > 180
+                          ? Colors.orange
+                          : AppColors.textSecondary,
                 ),
               ),
             ],
+          ),
+          
+          SizedBox(height: 16.h),
+          
+          // 字数限制提示
+          if (isOverLimit)
+            Container(
+              padding: EdgeInsets.all(12.w),
+              decoration: BoxDecoration(
+                color: AppColors.error.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8.r),
+                border: Border.all(color: AppColors.error.withOpacity(0.3)),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.error_outline,
+                    color: AppColors.error,
+                    size: 16.sp,
+                  ),
+                  SizedBox(width: 8.w),
+                  Expanded(
+                    child: Text(
+                      '场景简介超出200字限制，请精简内容',
+                      style: TextStyle(
+                        fontSize: 14.sp,
+                        color: AppColors.error,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            )
+          else if (currentLength > 180)
+            Container(
+              padding: EdgeInsets.all(12.w),
+              decoration: BoxDecoration(
+                color: Colors.orange.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8.r),
+                border: Border.all(color: Colors.orange.withOpacity(0.3)),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.warning_outlined,
+                    color: Colors.orange,
+                    size: 16.sp,
+                  ),
+                  SizedBox(width: 8.w),
+                  Expanded(
+                    child: Text(
+                      '即将达到字数限制，还可输入${200 - currentLength}个字符',
+                      style: TextStyle(
+                        fontSize: 14.sp,
+                        color: Colors.orange.shade700,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          
+          SizedBox(height: 24.h),
+          
+          Container(
+            padding: EdgeInsets.all(16.w),
+            decoration: BoxDecoration(
+              color: AppColors.primary.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(8.r),
+              border: Border.all(color: AppColors.primary.withOpacity(0.3)),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Icon(
+                      Icons.lightbulb_outline,
+                      color: AppColors.primary,
+                      size: 20.sp,
+                    ),
+                    SizedBox(width: 8.w),
+                    Text(
+                      '撰写建议',
+                      style: TextStyle(
+                        fontSize: 16.sp,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.primary,
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 8.h),
+                Text(
+                  '• 描述知识库的具体应用场景和目标用户\n• 说明包含的主要内容类型和范围\n• 突出知识库的核心价值和特色\n• 使用清晰简洁的语言，避免过于技术性的术语',
+                  style: TextStyle(
+                    fontSize: 14.sp,
+                    color: AppColors.primary,
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
       ),
@@ -501,6 +765,36 @@ class _KnowledgeBaseWizardPageState extends State<KnowledgeBaseWizardPage> {
               },
             ),
           ),
+          
+          SizedBox(height: 24.h),
+          
+          Container(
+            padding: EdgeInsets.all(16.w),
+            decoration: BoxDecoration(
+              color: AppColors.primary.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(8.r),
+              border: Border.all(color: AppColors.primary.withOpacity(0.3)),
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.auto_awesome_outlined,
+                  color: AppColors.primary,
+                  size: 20.sp,
+                ),
+                SizedBox(width: 12.w),
+                Expanded(
+                  child: Text(
+                    '选择类别后，在下一步可以使用预设模板快速填充场景简介和关键词',
+                    style: TextStyle(
+                      fontSize: 14.sp,
+                      color: AppColors.primary,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
         ],
       ),
     );
@@ -521,7 +815,7 @@ class _KnowledgeBaseWizardPageState extends State<KnowledgeBaseWizardPage> {
           ),
           SizedBox(height: 8.h),
           Text(
-            '设置匹配标签',
+            '建构匹配规则',
             style: TextStyle(
               fontSize: 24.sp,
               fontWeight: FontWeight.bold,
@@ -530,7 +824,7 @@ class _KnowledgeBaseWizardPageState extends State<KnowledgeBaseWizardPage> {
           ),
           SizedBox(height: 8.h),
           Text(
-            '添加相关标签，帮助系统更好地匹配和检索内容',
+            '添加关键词和标签，建立智能匹配规则，提高内容检索的准确性和相关性',
             style: TextStyle(
               fontSize: 16.sp,
               color: AppColors.textSecondary,
@@ -544,15 +838,34 @@ class _KnowledgeBaseWizardPageState extends State<KnowledgeBaseWizardPage> {
                 child: CustomTextField(
                   name: 'keywords',
                   controller: _keywordsController,
-                  label: '添加标签',
-                  hintText: '输入标签后点击添加',
+                  label: '添加关键词',
+                  hintText: '输入与知识库内容相关的关键词',
                   onSubmitted: (value) => _addKeyword(),
+                  validators: [
+                    (value) {
+                      if (value != null && value.trim().isNotEmpty) {
+                        if (value.trim().length < 2) {
+                          return '关键词至少需要2个字符';
+                        }
+                        if (value.trim().length > 20) {
+                          return '关键词不能超过20个字符';
+                        }
+                        if (_keywords.contains(value.trim())) {
+                          return '该关键词已存在';
+                        }
+                      }
+                      return null;
+                    },
+                  ],
                 ),
               ),
               SizedBox(width: 12.w),
               CustomButton(
                 text: '添加',
-                onPressed: _keywordsController.text.trim().isNotEmpty 
+                onPressed: _keywordsController.text.trim().isNotEmpty && 
+                          _keywordsController.text.trim().length >= 2 &&
+                          _keywordsController.text.trim().length <= 20 &&
+                          !_keywords.contains(_keywordsController.text.trim())
                     ? _addKeyword 
                     : null,
                 width: 80.w,
@@ -675,7 +988,7 @@ class _KnowledgeBaseWizardPageState extends State<KnowledgeBaseWizardPage> {
           ),
           SizedBox(height: 8.h),
           Text(
-            '确认创建知识库',
+            '确认新建知识库',
             style: TextStyle(
               fontSize: 24.sp,
               fontWeight: FontWeight.bold,
@@ -684,7 +997,7 @@ class _KnowledgeBaseWizardPageState extends State<KnowledgeBaseWizardPage> {
           ),
           SizedBox(height: 8.h),
           Text(
-            '请确认以下信息无误后创建您的知识库',
+            '请仔细检查以下配置信息，确认无误后点击"创建知识库"完成设置',
             style: TextStyle(
               fontSize: 16.sp,
               color: AppColors.textSecondary,
@@ -693,25 +1006,161 @@ class _KnowledgeBaseWizardPageState extends State<KnowledgeBaseWizardPage> {
           SizedBox(height: 32.h),
           
           Expanded(
-            child: Container(
-              padding: EdgeInsets.all(20.w),
-              decoration: BoxDecoration(
-                color: AppColors.surface,
-                borderRadius: BorderRadius.circular(12.r),
-                border: Border.all(color: AppColors.divider),
-              ),
+            child: SingleChildScrollView(
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _buildConfirmItem('知识库名称', _nameController.text),
+                  // 基本信息
+                  Container(
+                    width: double.infinity,
+                    padding: EdgeInsets.all(20.w),
+                    decoration: BoxDecoration(
+                      color: AppColors.surface,
+                      borderRadius: BorderRadius.circular(12.r),
+                      border: Border.all(color: AppColors.divider),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          '基本信息',
+                          style: TextStyle(
+                            fontSize: 18.sp,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.textPrimary,
+                          ),
+                        ),
+                        SizedBox(height: 16.h),
+                        _buildConfirmItem('文件夹名称', _nameController.text),
+                        SizedBox(height: 16.h),
+                        _buildConfirmItem('知识库类别', _categoryNames[_selectedCategory]!),
+                        SizedBox(height: 16.h),
+                        _buildConfirmItem('类别说明', _categoryDescriptions[_selectedCategory]!),
+                      ],
+                    ),
+                  ),
+                  
                   SizedBox(height: 16.h),
-                  _buildConfirmItem('描述', _descriptionController.text),
+                  
+                  // 场景简介
+                  Container(
+                    width: double.infinity,
+                    padding: EdgeInsets.all(20.w),
+                    decoration: BoxDecoration(
+                      color: AppColors.surface,
+                      borderRadius: BorderRadius.circular(12.r),
+                      border: Border.all(color: AppColors.divider),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          '场景简介',
+                          style: TextStyle(
+                            fontSize: 18.sp,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.textPrimary,
+                          ),
+                        ),
+                        SizedBox(height: 12.h),
+                        Container(
+                          width: double.infinity,
+                          padding: EdgeInsets.all(12.w),
+                          decoration: BoxDecoration(
+                            color: AppColors.background,
+                            borderRadius: BorderRadius.circular(8.r),
+                            border: Border.all(color: AppColors.divider),
+                          ),
+                          child: Text(
+                            _descriptionController.text.isNotEmpty 
+                                ? _descriptionController.text 
+                                : '暂无描述',
+                            style: TextStyle(
+                              fontSize: 14.sp,
+                              color: AppColors.textPrimary,
+                              height: 1.5,
+                            ),
+                          ),
+                        ),
+                        SizedBox(height: 8.h),
+                        Text(
+                          '字数：${_descriptionController.text.length}/200',
+                          style: TextStyle(
+                            fontSize: 12.sp,
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  
                   SizedBox(height: 16.h),
-                  _buildConfirmItem('类别', _categoryNames[_selectedCategory]!),
-                  SizedBox(height: 16.h),
-                  _buildConfirmItem(
-                    '标签', 
-                    _keywords.isEmpty ? '无' : _keywords.join('、'),
+                  
+                  // 匹配规则
+                  Container(
+                    width: double.infinity,
+                    padding: EdgeInsets.all(20.w),
+                    decoration: BoxDecoration(
+                      color: AppColors.surface,
+                      borderRadius: BorderRadius.circular(12.r),
+                      border: Border.all(color: AppColors.divider),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          '匹配规则',
+                          style: TextStyle(
+                            fontSize: 18.sp,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.textPrimary,
+                          ),
+                        ),
+                        SizedBox(height: 12.h),
+                        if (_keywords.isNotEmpty) ...[
+                          Wrap(
+                            spacing: 8.w,
+                            runSpacing: 8.h,
+                            children: _keywords.map((keyword) {
+                              return Container(
+                                padding: EdgeInsets.symmetric(
+                                  horizontal: 12.w,
+                                  vertical: 6.h,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: AppColors.primary.withOpacity(0.1),
+                                  borderRadius: BorderRadius.circular(16.r),
+                                  border: Border.all(
+                                    color: AppColors.primary.withOpacity(0.3),
+                                  ),
+                                ),
+                                child: Text(
+                                  keyword,
+                                  style: TextStyle(
+                                    fontSize: 14.sp,
+                                    color: AppColors.primary,
+                                  ),
+                                ),
+                              );
+                            }).toList(),
+                          ),
+                          SizedBox(height: 8.h),
+                          Text(
+                            '共${_keywords.length}个关键词',
+                            style: TextStyle(
+                              fontSize: 12.sp,
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
+                        ] else
+                          Text(
+                            '暂无关键词',
+                            style: TextStyle(
+                              fontSize: 14.sp,
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
+                      ],
+                    ),
                   ),
                 ],
               ),
@@ -730,14 +1179,14 @@ class _KnowledgeBaseWizardPageState extends State<KnowledgeBaseWizardPage> {
             child: Row(
               children: [
                 Icon(
-                  Icons.check_circle_outline,
+                  Icons.rocket_launch_outlined,
                   color: Colors.green,
                   size: 20.sp,
                 ),
                 SizedBox(width: 12.w),
                 Expanded(
                   child: Text(
-                    '创建完成后，您可以开始上传文档并构建您的知识库',
+                    '知识库创建完成后，您可以立即开始上传文档、构建知识图谱，并享受智能问答服务',
                     style: TextStyle(
                       fontSize: 14.sp,
                       color: Colors.green.shade700,

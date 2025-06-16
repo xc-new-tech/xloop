@@ -1,0 +1,1 @@
+import 'package:flutter/material.dart'; class AlertsWidget extends StatelessWidget { const AlertsWidget({super.key}); @override Widget build(BuildContext context) { return const Center(child: Text('系统警报')); } }
